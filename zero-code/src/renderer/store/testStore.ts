@@ -12,6 +12,7 @@ export interface TestState {
     screenshotPaths: Record<string, string>;
     isRunning: boolean;
     sessionId: string;
+    lastReportPath?: string;
 
     setRawAiResponse: (res: string) => void;
     setHasFlowchart: (has: boolean) => void;
@@ -20,6 +21,7 @@ export interface TestState {
     setActiveView: (view: 'flowchart' | 'code') => void;
     setIsRunning: (isRunning: boolean) => void;
     resetStepStatuses: () => void;
+    setLastReportPath: (path: string) => void;
 }
 
 export const useTestStore = create<TestState>((set) => ({
@@ -49,9 +51,10 @@ export const useTestStore = create<TestState>((set) => ({
     }),
     setActiveView: (view) => set({ activeView: view }),
     setIsRunning: (isRunning) => set({ isRunning: isRunning }),
+    setLastReportPath: (path) => set({ lastReportPath: path }),
     resetStepStatuses: () => set((state) => {
         const resetStatuses: Record<string, 'pending'> = {};
         state.nodes.forEach(n => resetStatuses[n.id] = 'pending');
-        return { stepStatuses: resetStatuses, screenshotPaths: {} };
+        return { stepStatuses: resetStatuses, screenshotPaths: {}, lastReportPath: undefined };
     })
 }));

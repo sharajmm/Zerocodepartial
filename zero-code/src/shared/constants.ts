@@ -13,6 +13,7 @@ export const IPC = {
     BROWSER_MOUNT: 'browser:mount',
     BROWSER_RESIZE: 'browser:resize',
     BROWSER_NAVIGATED: 'browser:navigated', // emitted when URL changes
+    BROWSER_CAPTURE: 'browser:capture',
     TEST_START: 'test:start',
     TEST_STEP_RESULT: 'test:step-result',
     TEST_COMPLETE: 'test:complete',
@@ -23,7 +24,9 @@ export const IPC = {
     PICKER_START: 'picker:start',
     PICKER_STOP: 'picker:stop',
     PICKER_ELEMENT_SELECTED: 'picker:element-selected',
+    ROOM_HOST: 'room:host',
+    ROOM_STOP: 'room:stop',
 } as const;
 
-export const DEFAULT_MODEL = 'qwen2.5-coder:7b';
+export const DEFAULT_MODEL = 'sharaj:7b';
 export const OLLAMA_BASE_URL = 'http://localhost:11434';

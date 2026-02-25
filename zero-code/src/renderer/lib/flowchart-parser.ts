@@ -19,6 +19,9 @@ export function parseFlowchartResponse(rawText: string): ParseResult {
     }
 
     try {
+        // Fix bad escaping of single quotes which AIs frequently output inside JSON strings
+        jsonStr = jsonStr.replace(/\\'/g, "'");
+
         const parsed = JSON.parse(jsonStr.trim());
 
         // Check if the AI returned a chat_response instead of a test payload

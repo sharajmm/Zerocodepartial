@@ -1,9 +1,12 @@
-import { BrowserWindow, ipcMain } from 'electron';
+import { BrowserWindow, ipcMain, dialog } from 'electron';
 import { IPC } from '../shared/constants';
 import { BrowserViewController } from './browser-view';
 import { OllamaClient } from './ollama-client';
 import { runPlaywrightTest, abortPlaywrightTest } from './playwright-engine';
 import { EvidenceManager } from './evidence-manager';
+import { generateReport } from './report-generator';
+import { hostRoom, stopRoom } from './websocket-server';
+import fs from 'fs';
 
 export function registerIpcHandlers(_mainWindow: BrowserWindow, browserViewController: BrowserViewController, ollamaClient: OllamaClient) {
 
@@ -21,6 +24,10 @@ export function registerIpcHandlers(_mainWindow: BrowserWindow, browserViewContr
 
     ipcMain.handle(IPC.BROWSER_GET_URL, async () => {
         return await browserViewController.getUrl();
+    });
+
+    ipcMain.handle(IPC.BROWSER_CAPTURE, async () => {
+        return await browserViewController.capturePage();
     });
 
     ipcMain.handle(IPC.BROWSER_GO_BACK, () => {
@@ -73,5 +80,41 @@ export function registerIpcHandlers(_mainWindow: BrowserWindow, browserViewContr
 
     ipcMain.handle(IPC.EVIDENCE_OPEN_FOLDER, async (_, { folderPath }) => {
         await EvidenceManager.openFolder(folderPath);
+    });
+
+    ipcMain.handle(IPC.REPORT_GENERATE, async (_, session) => {
+        try {
+            EvidenceManager.writeSessionLog(session.sessionId, session);
+            const pdfPath = await generateReport(session);
+            return { pdfPath };
+        } catch (error) {
+            console.error('Failed to generate report:', error);
+            throw error;
+        }
+    });
+
+    ipcMain.handle(IPC.REPORT_EXPORT, async (_, { pdfPath }) => {
+        if (!fs.existsSync(pdfPath)) return { savedTo: null };
+
+        const { canceled, filePath } = await dialog.showSaveDialog({
+            title: 'Export Test Report',
+            defaultPath: `ZeroCode-Report-${Date.now()}.pdf`,
+            filters: [{ name: 'PDF Documents', extensions: ['pdf'] }]
+        });
+
+        if (!canceled && filePath) {
+            fs.copyFileSync(pdfPath, filePath);
+            return { savedTo: filePath };
+        }
+        return { savedTo: null };
+    });
+
+    // Local Collaboration WS Server
+    ipcMain.handle(IPC.ROOM_HOST, async () => {
+        return await hostRoom();
+    });
+
+    ipcMain.handle(IPC.ROOM_STOP, () => {
+        stopRoom();
     });
 }

@@ -1,8 +1,10 @@
 import { useChatStore } from '../../store/chatStore';
 import { useTestStore } from '../../store/testStore';
 import { useSettingsStore } from '../../store/settingsStore';
+import { useCollabStore } from '../../store/collabStore';
 import ElementPicker from '../browser/ElementPicker';
 import ChatMessageBubble from './ChatMessage';
+import ReportActions from '../report/ReportActions';
 import { useOllamaStream } from '../../hooks/useOllamaStream';
 import { useTestExecution } from '../../hooks/useTestExecution';
 import { useRef, useState, useEffect } from 'react';
@@ -18,6 +20,11 @@ export default function ChatPanel() {
     const pinnedElements = useBrowserStore(state => state.pinnedElements);
     const removePinnedElement = useBrowserStore(state => state.removePinnedElement);
     const selectedModel = useSettingsStore(state => state.selectedModel);
+
+    // Disable inputs if we are a guest in a room
+    const roomId = useCollabStore(state => state.roomId);
+    const role = useCollabStore(state => state.role);
+    const isGuest = Boolean(roomId) && role !== 'Owner';
 
     // Test execution hook
     const { runTest, abortTest, isRunning } = useTestExecution();
@@ -69,7 +76,7 @@ export default function ChatPanel() {
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <h2 className="text-gray-400 font-mono text-sm">Chat (Right Panel)</h2>
-                    {messages.length > 0 && (
+                    {messages.length > 0 && !isGuest && (
                         <button
                             onClick={() => clearChat()}
                             className="p-1 text-gray-500 hover:text-red-400 rounded transition-colors"
@@ -80,8 +87,8 @@ export default function ChatPanel() {
                     )}
                 </div>
                 <div className="flex items-center gap-2">
-                    <ElementPicker />
-                    {isRunning ? (
+                    {!isGuest && <ElementPicker />}
+                    {!isGuest && (isRunning ? (
                         <button
                             onClick={abortTest}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/20 text-red-500 hover:bg-red-500/30 rounded-md text-sm font-medium transition-colors shadow-sm"
@@ -98,9 +105,11 @@ export default function ChatPanel() {
                             <Play size={14} fill="currentColor" />
                             Run Test
                         </button>
-                    )}
+                    ))}
                 </div>
             </div>
+
+            <ReportActions />
 
             {/* Messages Window */}
             <div className="flex-1 bg-gray-950 border border-gray-800 rounded-md flex flex-col p-4 overflow-y-auto mb-4 gap-4">
@@ -165,11 +174,11 @@ export default function ChatPanel() {
                         <form onSubmit={handleSubmit} className="flex flex-col">
                             <input
                                 type="text"
-                                placeholder={isStreaming ? "AI is typing..." : "Describe what to test..."}
+                                placeholder={isGuest ? "Host is sharing their environment..." : isStreaming ? "AI is typing..." : "Describe what to test..."}
                                 className="w-full rounded bg-gray-900 border border-gray-700 px-3 py-3 text-sm text-gray-200 focus:outline-none focus:border-accent shadow-inner transition-colors disabled:opacity-50"
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                disabled={isStreaming}
+                                disabled={isStreaming || isGuest}
                             />
                         </form>
                     )}

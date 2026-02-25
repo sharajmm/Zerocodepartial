@@ -13,6 +13,8 @@ Respond naturally in plain text. DO NOT output JSON. DO NOT try to build a flowc
 1. You MUST enclose the generated JSON payload inside a markdown code block starting with \`\`\`json.
 2. Use ONLY the CSS selectors provided in the DOM Map below. Do not guess selectors.
 3. The playwright_code property MUST NOT be just a comment. It MUST contain actual executing Playwright code (await page.click, await expect, etc).
+4. DO NOT output any conversational text or explanation before or after the JSON block. Return EXACTLY and ONLY the markdown code block containing the JSON payload.
+5. In your JSON strings, DO NOT escape single quotes (e.g. avoid \\'). Standard JSON requires unescaped single quotes inside string values (like 'dog').
 
 **DOM MAP** (Interactive, visible elements on the page):
 ${domMapJson}

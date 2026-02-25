@@ -16,14 +16,19 @@ const IPC = {
   BROWSER_RESIZE: "browser:resize",
   BROWSER_NAVIGATED: "browser:navigated",
   // emitted when URL changes
+  BROWSER_CAPTURE: "browser:capture",
   TEST_START: "test:start",
   TEST_STEP_RESULT: "test:step-result",
   TEST_COMPLETE: "test:complete",
   TEST_ABORT: "test:abort",
+  REPORT_GENERATE: "report:generate",
+  REPORT_EXPORT: "report:export",
   EVIDENCE_OPEN_FOLDER: "evidence:open-folder",
   PICKER_START: "picker:start",
   PICKER_STOP: "picker:stop",
-  PICKER_ELEMENT_SELECTED: "picker:element-selected"
+  PICKER_ELEMENT_SELECTED: "picker:element-selected",
+  ROOM_HOST: "room:host",
+  ROOM_STOP: "room:stop"
 };
 electron.contextBridge.exposeInMainWorld("electronAPI", {
   // Browser
@@ -31,6 +36,7 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
   browserResize: (bounds) => electron.ipcRenderer.invoke(IPC.BROWSER_RESIZE, bounds),
   browserNavigate: (url) => electron.ipcRenderer.invoke(IPC.BROWSER_NAVIGATE, { url }),
   browserGetUrl: () => electron.ipcRenderer.invoke(IPC.BROWSER_GET_URL),
+  browserCapture: () => electron.ipcRenderer.invoke(IPC.BROWSER_CAPTURE),
   browserGoBack: () => electron.ipcRenderer.invoke(IPC.BROWSER_GO_BACK),
   browserGoForward: () => electron.ipcRenderer.invoke(IPC.BROWSER_GO_FORWARD),
   browserReload: () => electron.ipcRenderer.invoke(IPC.BROWSER_RELOAD),
@@ -66,6 +72,12 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
     electron.ipcRenderer.on(IPC.TEST_COMPLETE, (_, data) => cb(data));
   },
   evidenceOpenFolder: (folderPath) => electron.ipcRenderer.invoke(IPC.EVIDENCE_OPEN_FOLDER, { folderPath }),
+  // Report
+  reportGenerate: (session) => electron.ipcRenderer.invoke(IPC.REPORT_GENERATE, session),
+  reportExport: (pdfPath) => electron.ipcRenderer.invoke(IPC.REPORT_EXPORT, { pdfPath }),
+  // Local Collab
+  roomHost: () => electron.ipcRenderer.invoke(IPC.ROOM_HOST),
+  roomStop: () => electron.ipcRenderer.invoke(IPC.ROOM_STOP),
   removeAllListeners: (channel) => {
     electron.ipcRenderer.removeAllListeners(channel);
   }

@@ -58,7 +58,8 @@ function expect(locator) {
     let currentStepProps = { stepIndex: 0, status: 'running' };
     
     // Connect to the embedded ZeroCode Electron browser instead of launching a new one
-    const browser = await chromium.connectOverCDP('http://localhost:9222');
+    const cdpPort = process.env.VITE_CDP_PORT || '9222';
+    const browser = await chromium.connectOverCDP(\`http://localhost:\${cdpPort}\`);
     const context = browser.contexts()[0];
     
     // Find the BrowserView page (filter out the main ZeroCode UI)

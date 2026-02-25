@@ -1,4 +1,4 @@
-import { BrowserView, BrowserWindow } from 'electron';
+import { BrowserView, BrowserWindow, session } from 'electron';
 import { IPC } from '../shared/constants';
 import { DOM_SCRAPE_SCRIPT } from '../renderer/lib/dom-scrape-script';
 
@@ -11,10 +11,13 @@ export class BrowserViewController {
     }
 
     public init() {
+        const partition = 'persist:zerocode-' + (process.env.VITE_CDP_PORT || Date.now());
+        const viewSession = session.fromPartition(partition);
         this.view = new BrowserView({
             webPreferences: {
                 nodeIntegration: false,
                 contextIsolation: true,
+                session: viewSession
             }
         });
 
@@ -39,6 +42,16 @@ export class BrowserViewController {
             width: Math.round(bounds.width),
             height: Math.round(bounds.height)
         });
+    }
+
+    public async capturePage() {
+        if (!this.view) return null;
+        try {
+            const image = await this.view.webContents.capturePage();
+            return image.toDataURL(); // Base64 data URI
+        } catch (e) {
+            return null;
+        }
     }
 
     public async navigate(url: string) {

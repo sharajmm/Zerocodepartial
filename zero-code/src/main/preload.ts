@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     browserResize: (bounds: any) => ipcRenderer.invoke(IPC.BROWSER_RESIZE, bounds),
     browserNavigate: (url: string) => ipcRenderer.invoke(IPC.BROWSER_NAVIGATE, { url }),
     browserGetUrl: () => ipcRenderer.invoke(IPC.BROWSER_GET_URL),
+    browserCapture: () => ipcRenderer.invoke(IPC.BROWSER_CAPTURE),
     browserGoBack: () => ipcRenderer.invoke(IPC.BROWSER_GO_BACK),
     browserGoForward: () => ipcRenderer.invoke(IPC.BROWSER_GO_FORWARD),
     browserReload: () => ipcRenderer.invoke(IPC.BROWSER_RELOAD),
@@ -48,6 +49,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.on(IPC.TEST_COMPLETE, (_, data) => cb(data));
     },
     evidenceOpenFolder: (folderPath: string) => ipcRenderer.invoke(IPC.EVIDENCE_OPEN_FOLDER, { folderPath }),
+
+    // Report
+    reportGenerate: (session: any) => ipcRenderer.invoke(IPC.REPORT_GENERATE, session),
+    reportExport: (pdfPath: string) => ipcRenderer.invoke(IPC.REPORT_EXPORT, { pdfPath }),
+
+    // Local Collab
+    roomHost: () => ipcRenderer.invoke(IPC.ROOM_HOST),
+    roomStop: () => ipcRenderer.invoke(IPC.ROOM_STOP),
 
     removeAllListeners: (channel: string) => {
         ipcRenderer.removeAllListeners(channel);

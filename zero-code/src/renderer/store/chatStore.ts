@@ -17,34 +17,36 @@ interface ChatState {
     clearChat: () => void;
 }
 
-export const useChatStore = create<ChatState>((set) => ({
-    messages: [],
-    isStreaming: false,
-
-    addMessage: (msg) => set((state) => ({
-        messages: [...state.messages, { ...msg, id: crypto.randomUUID() }],
-        isStreaming: msg.isStreaming || false,
-    })),
-
-    appendToken: (messageId, token) => set((state) => ({
-        messages: state.messages.map((m) =>
-            m.id === messageId ? { ...m, content: m.content + token } : m
-        ),
-    })),
-
-    markStreamComplete: (messageId) => set((state) => ({
-        messages: state.messages.map((m) =>
-            m.id === messageId ? { ...m, isStreaming: false } : m
-        ),
+export const useChatStore = create<ChatState>()(
+    (set) => ({
+        messages: [],
         isStreaming: false,
-    })),
 
-    setError: (messageId, error) => set((state) => ({
-        messages: state.messages.map((m) =>
-            m.id === messageId ? { ...m, content: m.content + '\n\n**Error:** ' + error, isStreaming: false } : m
-        ),
-        isStreaming: false,
-    })),
+        addMessage: (msg) => set((state) => ({
+            messages: [...state.messages, { ...msg, id: crypto.randomUUID() }],
+            isStreaming: msg.isStreaming || false,
+        })),
 
-    clearChat: () => set({ messages: [], isStreaming: false }),
-}));
+        appendToken: (messageId, token) => set((state) => ({
+            messages: state.messages.map((m) =>
+                m.id === messageId ? { ...m, content: m.content + token } : m
+            ),
+        })),
+
+        markStreamComplete: (messageId) => set((state) => ({
+            messages: state.messages.map((m) =>
+                m.id === messageId ? { ...m, isStreaming: false } : m
+            ),
+            isStreaming: false,
+        })),
+
+        setError: (messageId, error) => set((state) => ({
+            messages: state.messages.map((m) =>
+                m.id === messageId ? { ...m, content: m.content + '\n\n**Error:** ' + error, isStreaming: false } : m
+            ),
+            isStreaming: false,
+        })),
+
+        clearChat: () => set({ messages: [], isStreaming: false }),
+    })
+);

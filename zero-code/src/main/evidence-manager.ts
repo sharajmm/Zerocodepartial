@@ -1,6 +1,7 @@
 import { app, shell } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
+import type { TestSession } from '../renderer/types/test';
 
 export class EvidenceManager {
     static getEvidenceDir(sessionId: string): string {
@@ -14,8 +15,14 @@ export class EvidenceManager {
 
     static saveErrorLog(sessionId: string, logData: any) {
         const sessionDir = this.getEvidenceDir(sessionId);
-        const logPath = path.join(sessionDir, `session-${sessionId}.json`);
+        const logPath = path.join(sessionDir, `error-${sessionId}.json`);
         fs.writeFileSync(logPath, JSON.stringify(logData, null, 2));
+    }
+
+    static writeSessionLog(sessionId: string, session: TestSession) {
+        const sessionDir = this.getEvidenceDir(sessionId);
+        const logPath = path.join(sessionDir, `session-${sessionId}.json`);
+        fs.writeFileSync(logPath, JSON.stringify(session, null, 2));
     }
 
     static async openFolder(folderPath: string) {

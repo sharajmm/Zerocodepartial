@@ -1,0 +1,9 @@
+src/main/websocket-server.ts(1,44): error TS7016: Could not find a declaration file for module 'ws'. 'C:/Users/shara/Downloads/ZeroCode/zero-code/node_modules/ws/wrapper.mjs' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/ws` if it exists or add a new declaration (.d.ts) file containing `declare module 'ws';`
+src/main/websocket-server.ts(29,38): error TS7006: Parameter 'client' implicitly has an 'any' type.
+src/main/websocket-server.ts(38,19): error TS6133: 'addr' is declared but its value is never read.
+src/main/websocket-server.ts(39,19): error TS6133: 'ip' is declared but its value is never read.
+src/renderer/components/collaboration/CollabProvider.tsx(1,10): error TS1484: 'ReactNode' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/renderer/components/collaboration/CollabSync.tsx(2,51): error TS1484: 'SyncPayload' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/renderer/components/collaboration/CollabSync.tsx(10,11): error TS6133: 'setRoomId' is declared but its value is never read.
+src/renderer/lib/localRoom.ts(10,31): error TS6133: 'address' is declared but its value is never read.

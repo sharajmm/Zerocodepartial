@@ -48,15 +48,19 @@
 - [x] Render Screenshots on UI for Failed tests
 
 ## Phase 6: PDF Reports + Evidence Logging
-- [ ] Build `report-generator.ts` with PDFKit
+- [x] Build `report-generator.ts` with PDFKit
+- [x] Wire `report:generate` and `report:export` IPC handlers
+- [x] Auto-generate test report on completion 
+- [x] Build `ReportActions` UI inside chat
 - [x] Establish screenshot mapping + saving
+- [x] Save raw session JSON evidence in Evidence Manager
 
 ## Phase 7: Live Collaboration
-- [ ] Initialize `Liveblocks` endpoints
-- [ ] Connect multi-user Presence dots
-- [ ] Track WS bandwidth inside metric Status Bar
+- [x] Initialize `Liveblocks` endpoints
+- [x] Connect multi-user Presence dots
+- [x] Track WS bandwidth inside metric Status Bar
 
 ## Phase 8: Final Polish
-- [ ] Add loading skeletons
+- [x] Add loading skeletons
 - [x] Handle AI parse errors natively
-- [ ] Implement persistent localized Chat History serialization and reloading
+- [x] Implement persistent localized Chat History serialization and reloading

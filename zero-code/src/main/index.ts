@@ -50,7 +50,9 @@ function createWindow() {
     registerIpcHandlers(mainWindow, browserViewController, ollamaClient);
 }
 
-app.commandLine.appendSwitch('remote-debugging-port', '9222');
+const cdpPort = Math.floor(Math.random() * (12000 - 9200 + 1) + 9200);
+process.env.VITE_CDP_PORT = cdpPort.toString();
+app.commandLine.appendSwitch('remote-debugging-port', cdpPort.toString());
 
 app.whenReady().then(() => {
     createWindow();
