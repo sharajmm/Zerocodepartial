@@ -1,0 +1,77 @@
+import { BrowserWindow, ipcMain } from 'electron';
+import { IPC } from '../shared/constants';
+import { BrowserViewController } from './browser-view';
+import { OllamaClient } from './ollama-client';
+import { runPlaywrightTest, abortPlaywrightTest } from './playwright-engine';
+import { EvidenceManager } from './evidence-manager';
+
+export function registerIpcHandlers(_mainWindow: BrowserWindow, browserViewController: BrowserViewController, ollamaClient: OllamaClient) {
+
+    ipcMain.handle(IPC.BROWSER_MOUNT, async (_, bounds) => {
+        browserViewController.mount(bounds);
+    });
+
+    ipcMain.handle(IPC.BROWSER_RESIZE, async (_, bounds) => {
+        browserViewController.setBounds(bounds);
+    });
+
+    ipcMain.handle(IPC.BROWSER_NAVIGATE, async (_, { url }) => {
+        return await browserViewController.navigate(url);
+    });
+
+    ipcMain.handle(IPC.BROWSER_GET_URL, async () => {
+        return await browserViewController.getUrl();
+    });
+
+    ipcMain.handle(IPC.BROWSER_GO_BACK, () => {
+        browserViewController.goBack();
+    });
+
+    ipcMain.handle(IPC.BROWSER_GO_FORWARD, () => {
+        browserViewController.goForward();
+    });
+
+    ipcMain.handle(IPC.BROWSER_RELOAD, () => {
+        browserViewController.reload();
+    });
+
+    ipcMain.handle(IPC.DOM_SCRAPE, async () => {
+        return await browserViewController.scrapeDOM();
+    });
+
+    ipcMain.handle(IPC.PICKER_START, async () => {
+        await browserViewController.startPicker();
+    });
+
+    ipcMain.handle(IPC.PICKER_STOP, async () => {
+        await browserViewController.stopPicker();
+    });
+
+    // Ollama endpoints
+    ipcMain.handle(IPC.OLLAMA_HEALTH, async () => {
+        return await ollamaClient.checkHealth();
+    });
+
+    ipcMain.handle(IPC.OLLAMA_LIST_MODELS, async () => {
+        return await ollamaClient.listModels();
+    });
+
+    ipcMain.handle(IPC.OLLAMA_GENERATE, async (_, { model, messages }) => {
+        // Doesn't return directly, streams back via event
+        ollamaClient.generate(model, messages);
+        return { success: true };
+    });
+
+    // Test execution
+    ipcMain.handle(IPC.TEST_START, async (_, { code, url, steps, sessionId }) => {
+        runPlaywrightTest(_mainWindow, code, url, steps, sessionId);
+    });
+
+    ipcMain.handle(IPC.TEST_ABORT, async () => {
+        abortPlaywrightTest();
+    });
+
+    ipcMain.handle(IPC.EVIDENCE_OPEN_FOLDER, async (_, { folderPath }) => {
+        await EvidenceManager.openFolder(folderPath);
+    });
+}

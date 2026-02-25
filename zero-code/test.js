@@ -1,0 +1,1 @@
+import { chromium } from 'playwright-core'; chromium.launch({headless:false}).then(b => {console.log('works');b.close();}).catch(console.error);

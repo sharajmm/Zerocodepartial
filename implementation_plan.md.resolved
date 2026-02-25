@@ -1,0 +1,683 @@
+# Zero Code — Complete Architecture Blueprint
+
+> Architecture document for an Electron-based desktop QA testing platform.
+> Expo deadline: **March 2–3, 2026**. Solo developer. 8-day build.
+
+---
+
+## 1. Complete Project Folder Structure
+
+```
+zero-code/
+├── package.json
+├── electron-builder.yml
+├── tsconfig.json
+├── tailwind.config.js
+├── postcss.config.js
+├── vite.config.ts                    # Vite for React renderer build
+│
+├── src/
+│   ├── main/                         # ── Electron Main Process ──
+│   │   ├── index.ts                  # App entry: creates BrowserWindow + BrowserView
+│   │   ├── ipc-handlers.ts           # All IPC channel registrations (main-side)
+│   │   ├── browser-view.ts           # BrowserView lifecycle, URL navigation, DOM scrape injection
+│   │   ├── playwright-engine.ts      # Playwright headless runner, step-by-step execution
+│   │   ├── report-generator.ts       # PDFKit report builder
+│   │   ├── ollama-client.ts          # HTTP client for Ollama API (health check, model list, generate)
+│   │   ├── evidence-manager.ts       # Screenshot saving, log file writing, temp folder mgmt
+│   │   └── preload.ts                # contextBridge exposing IPC to renderer
+│   │
+│   ├── renderer/                     # ── React Renderer Process ──
+│   │   ├── index.html
+│   │   ├── main.tsx                  # React root mount
+│   │   ├── App.tsx                   # Root layout — 3-panel shell
+│   │   ├── index.css                 # Tailwind directives + global dark theme tokens
+│   │   │
+│   │   ├── components/
+│   │   │   ├── layout/
+│   │   │   │   ├── ThreePanelLayout.tsx    # Resizable 3-panel container (allotment)
+│   │   │   │   ├── StatusBar.tsx           # Bottom bar: model indicator + internet meter
+│   │   │   │   └── TopBar.tsx             # App title bar / window controls
+│   │   │   │
+│   │   │   ├── browser/
+│   │   │   │   ├── EmbeddedBrowser.tsx     # <webview> wrapper + URL bar
+│   │   │   │   └── ElementPicker.tsx       # Highlight overlay + selector tooltip logic
+│   │   │   │
+│   │   │   ├── chat/
+│   │   │   │   ├── ChatPanel.tsx           # Chat container: message list + input
+│   │   │   │   ├── ChatInput.tsx           # Text input + pinned element chips
+│   │   │   │   ├── ChatMessage.tsx         # Single message bubble (user / AI / system)
+│   │   │   │   └── StreamingIndicator.tsx  # AI "thinking" animation
+│   │   │   │
+│   │   │   ├── flowchart/
+│   │   │   │   ├── FlowchartPanel.tsx      # Container: toggle header + canvas/code
+│   │   │   │   ├── FlowchartCanvas.tsx     # React Flow canvas with custom nodes
+│   │   │   │   ├── CodeView.tsx            # Prism.js syntax-highlighted code viewer
+│   │   │   │   ├── ViewToggle.tsx          # Flowchart ↔ Code toggle button
+│   │   │   │   ├── ProgressBar.tsx         # Top progress bar (steps done / total)
+│   │   │   │   └── nodes/
+│   │   │   │       ├── ActionNode.tsx      # Custom node: action step
+│   │   │   │       └── AssertionNode.tsx   # Custom node: assertion step
+│   │   │   │
+│   │   │   ├── collaboration/
+│   │   │   │   ├── CollabProvider.tsx      # Liveblocks RoomProvider wrapper
+│   │   │   │   ├── InviteModal.tsx         # Generate + display room code
+│   │   │   │   ├── JoinModal.tsx           # Enter room code to join
+│   │   │   │   ├── PresenceAvatars.tsx     # Colored dots showing who's online
+│   │   │   │   └── RoleGate.tsx            # Conditional render based on user role
+│   │   │   │
+│   │   │   ├── settings/
+│   │   │   │   ├── SettingsModal.tsx       # Settings overlay
+│   │   │   │   └── ModelSwitcher.tsx       # Ollama model list + select
+│   │   │   │
+│   │   │   └── report/
+│   │   │       └── ReportActions.tsx       # "Generate Report" + "Export PDF" buttons
+│   │   │
+│   │   ├── store/
+│   │   │   ├── index.ts                   # Re-export all stores
+│   │   │   ├── testStore.ts               # Zustand: test state (nodes, edges, code, results)
+│   │   │   ├── chatStore.ts               # Zustand: chat messages, streaming state
+│   │   │   ├── browserStore.ts            # Zustand: current URL, DOM map, picker state
+│   │   │   ├── settingsStore.ts           # Zustand: selected model, Ollama status
+│   │   │   └── collabStore.ts             # Zustand: room ID, role, presence, byte counters
+│   │   │
+│   │   ├── hooks/
+│   │   │   ├── useIPC.ts                  # Hook wrapping window.electronAPI calls
+│   │   │   ├── useDOMScraper.ts           # Triggers DOM scrape, returns element map
+│   │   │   ├── useTestExecution.ts        # Orchestrates test run lifecycle
+│   │   │   ├── useOllamaStream.ts         # Streams AI response tokens into chat
+│   │   │   └── useElementPicker.ts        # Manages picker mode on/off + pinned elements
+│   │   │
+│   │   ├── lib/
+│   │   │   ├── prompt-builder.ts          # Builds Ollama prompt from intent + DOM map
+│   │   │   ├── flowchart-parser.ts        # Parses AI JSON response → React Flow nodes/edges
+│   │   │   ├── dom-scrape-script.ts       # The raw JS string injected into webview
+│   │   │   └── liveblocks.config.ts       # Liveblocks client init + type definitions
+│   │   │
+│   │   └── types/
+│   │       ├── ipc.ts                     # IPC channel names + payload types
+│   │       ├── flowchart.ts               # FlowchartNode, FlowchartEdge, StepStatus
+│   │       ├── dom.ts                     # DOMElement type from scrape
+│   │       └── test.ts                    # TestSession, TestStep, TestResult
+│   │
+│   └── shared/                            # ── Shared types used by both processes ──
+│       └── constants.ts                   # IPC channel name constants, default model name
+│
+├── scripts/
+│   └── install-playwright.js              # Post-install: downloads chromium for Playwright
+│
+├── assets/
+│   ├── icon.png                           # App icon (512x512)
+│   └── fonts/
+│       └── JetBrainsMono-Regular.woff2    # Bundled font for code view
+│
+└── dist/                                  # Build output (gitignored)
+```
+
+---
+
+## 2. Dependency List
+
+### Production Dependencies
+
+| Package | Version | Purpose |
+|---|---|---|
+| `electron` | `^33.0.0` | Desktop shell |
+| `react` | `^19.0.0` | UI framework |
+| `react-dom` | `^19.0.0` | React DOM renderer |
+| `@xyflow/react` | `^12.0.0` | Flowchart visualizer (React Flow v12) |
+| `zustand` | `^5.0.0` | State management — chosen over Redux for simplicity and speed |
+| `playwright-core` | `^1.50.0` | Test execution engine (`playwright-core` — no bundled browsers, we install chromium separately) |
+| `pdfkit` | `^0.15.0` | PDF report generation |
+| `prismjs` | `^1.29.0` | Syntax highlighting for code view |
+| `@liveblocks/client` | `^2.0.0` | Collaboration realtime client |
+| `@liveblocks/react` | `^2.0.0` | Collaboration React bindings |
+| `allotment` | `^1.0.0` | Resizable split panes |
+| `nanoid` | `^5.0.0` | Room ID generation |
+| `blob-stream` | `^0.1.3` | PDFKit stream helper |
+
+### Dev Dependencies
+
+| Package | Version | Purpose |
+|---|---|---|
+| `vite` | `^6.0.0` | Renderer bundler |
+| `@vitejs/plugin-react` | `^4.0.0` | React Fast Refresh |
+| `vite-plugin-electron` | `^0.28.0` | Electron + Vite integration |
+| `vite-plugin-electron-renderer` | `^0.14.0` | Node.js in renderer |
+| `typescript` | `^5.7.0` | Type safety |
+| `tailwindcss` | `^3.4.0` | Utility-first CSS |
+| `postcss` | `^8.0.0` | CSS processing |
+| `autoprefixer` | `^10.0.0` | CSS vendor prefixes |
+| `electron-builder` | `^25.0.0` | App packaging + distribution |
+| `@types/react` | `^19.0.0` | React types |
+| `@types/react-dom` | `^19.0.0` | React DOM types |
+| `@types/prismjs` | `^1.26.0` | Prism types |
+| `@types/pdfkit` | `^0.13.0` | PDFKit types |
+
+> **Decision: Zustand over Redux Toolkit.** For a solo dev on an 8-day sprint, Zustand's zero-boilerplate API saves hours. Stores are plain functions. No action creators, no reducers, no slices. The entire state layer can be written in under 200 lines.
+
+> **Decision: `playwright-core` not `playwright`.** The full `playwright` package bundles all browsers (400MB+). `playwright-core` is the lightweight API-only package (~3MB). We install only Chromium via a post-install script using `npx playwright install chromium`.
+
+---
+
+## 3. IPC Channel Specification
+
+All channel names use the `namespace:action` convention. Direction: `R→M` = Renderer to Main, `M→R` = Main to Renderer.
+
+| Channel | Direction | Payload (Sender) | Payload (Response/Event) | Purpose |
+|---|---|---|---|---|
+| `ollama:health` | R→M | `void` | `{ status: 'ok' \| 'error', models: OllamaModel[] }` | Startup health check + model list |
+| `ollama:list-models` | R→M | `void` | `{ models: OllamaModel[] }` | Refresh model list |
+| `ollama:generate` | R→M | `{ model: string, prompt: string }` | *Streams via* `ollama:generate:token` | Start AI generation |
+| `ollama:generate:token` | M→R | — | `{ token: string, done: boolean }` | Streamed token from Ollama |
+| `ollama:generate:error` | M→R | — | `{ error: string }` | Generation error |
+| `dom:scrape` | R→M | `void` | `{ elements: DOMElement[] }` | Trigger DOM scrape on BrowserView |
+| `browser:navigate` | R→M | `{ url: string }` | `{ success: boolean }` | Navigate BrowserView to URL |
+| `browser:get-url` | R→M | `void` | `{ url: string }` | Get current BrowserView URL |
+| `test:start` | R→M | `{ code: string, url: string, steps: FlowchartNode[] }` | `void` | Begin Playwright execution |
+| `test:step-result` | M→R | — | `{ stepIndex: number, status: 'passed' \| 'failed', screenshotPath?: string, error?: string }` | Per-step result pushed to renderer |
+| `test:complete` | M→R | — | `{ sessionId: string, totalPassed: number, totalFailed: number }` | All steps done |
+| `test:abort` | R→M | `void` | `void` | User cancels mid-run |
+| `report:generate` | R→M | `{ session: TestSession }` | `{ pdfPath: string }` | Generate PDF report, return saved path |
+| `report:export` | R→M | `{ pdfPath: string }` | `{ savedTo: string }` | Save PDF to user-chosen directory (native dialog) |
+| `evidence:open-folder` | R→M | `{ folderPath: string }` | `void` | Open folder in OS file explorer |
+| `picker:start` | R→M | `void` | `void` | Inject element picker highlight script into BrowserView |
+| `picker:stop` | R→M | `void` | `void` | Remove element picker overlay |
+| `picker:element-selected` | M→R | — | `{ selector: string, tagName: string, text: string }` | User clicked an element in picker mode |
+
+### IPC Type Definitions
+
+```typescript
+// src/shared/constants.ts
+export const IPC = {
+  OLLAMA_HEALTH:          'ollama:health',
+  OLLAMA_LIST_MODELS:     'ollama:list-models',
+  OLLAMA_GENERATE:        'ollama:generate',
+  OLLAMA_GENERATE_TOKEN:  'ollama:generate:token',
+  OLLAMA_GENERATE_ERROR:  'ollama:generate:error',
+  DOM_SCRAPE:             'dom:scrape',
+  BROWSER_NAVIGATE:       'browser:navigate',
+  BROWSER_GET_URL:        'browser:get-url',
+  TEST_START:             'test:start',
+  TEST_STEP_RESULT:       'test:step-result',
+  TEST_COMPLETE:          'test:complete',
+  TEST_ABORT:             'test:abort',
+  REPORT_GENERATE:        'report:generate',
+  REPORT_EXPORT:          'report:export',
+  EVIDENCE_OPEN_FOLDER:   'evidence:open-folder',
+  PICKER_START:           'picker:start',
+  PICKER_STOP:            'picker:stop',
+  PICKER_ELEMENT_SELECTED:'picker:element-selected',
+} as const;
+
+export const DEFAULT_MODEL = 'qwen2.5-coder:3b';
+export const OLLAMA_BASE_URL = 'http://localhost:11434';
+```
+
+---
+
+## 4. AI Prompt Template
+
+This is the exact prompt structure sent to Ollama. The `{DOM_MAP}` and `{USER_INTENT}` placeholders are filled at runtime.
+
+```
+// src/renderer/lib/prompt-builder.ts — buildPrompt(intent: string, domMap: DOMElement[], url: string)
+
+SYSTEM:
+You are a QA test automation expert. You generate Playwright test scripts and visual test flowcharts.
+
+RULES:
+1. You MUST use ONLY selectors that appear in the DOM MAP below. Never invent selectors.
+2. Output ONLY valid JSON — no markdown fences, no explanation, no prose.
+3. The playwright_code must be a complete, runnable Playwright script.
+4. Each test step must map 1:1 between a flowchart node and a code block.
+5. Use page.goto() as the first step with the provided URL.
+6. For assertions, use expect() from @playwright/test.
+7. Wrap the entire test in: test('Generated Test', async ({ page }) => { ... });
+
+DOM MAP (Real elements on the page at {URL}):
+{DOM_MAP_JSON}
+
+USER REQUEST:
+"{USER_INTENT}"
+
+TARGET URL: {URL}
+
+OUTPUT FORMAT (strict JSON, no markdown):
+{
+  "flowchart": {
+    "nodes": [
+      { "id": "1", "label": "Human readable step description", "type": "action|assertion", "selector": "#real-selector-or-null" }
+    ],
+    "edges": [
+      { "id": "e1-2", "source": "1", "target": "2" }
+    ]
+  },
+  "playwright_code": "const { test, expect } = require('@playwright/test');\n\ntest('Generated Test', async ({ page }) => {\n  // steps here\n});"
+}
+```
+
+### DOM Map Format Injected Into Prompt
+
+```json
+[
+  { "tag": "BUTTON", "id": "submit-btn", "classes": "btn btn-primary", "text": "Submit", "selector": "#submit-btn", "ariaLabel": "Submit form" },
+  { "tag": "INPUT", "id": "email", "classes": "form-input", "text": "", "placeholder": "Enter email", "selector": "#email", "ariaLabel": null },
+  { "tag": "A", "id": "", "classes": "nav-link", "text": "About Us", "href": "/about", "selector": "a.nav-link", "ariaLabel": null }
+]
+```
+
+### DOM Scrape Script
+
+```javascript
+// src/renderer/lib/dom-scrape-script.ts — exported as a raw string
+export const DOM_SCRAPE_SCRIPT = `
+(() => {
+  const interactiveSelectors = 'button, a, input, select, textarea, [role="button"], [role="link"], [role="checkbox"], [role="tab"]';
+  const elements = Array.from(document.querySelectorAll(interactiveSelectors));
+  return elements.slice(0, 200).map((el, i) => {
+    const computeSelector = (el) => {
+      if (el.id) return '#' + el.id;
+      if (el.getAttribute('data-testid')) return '[data-testid="' + el.getAttribute('data-testid') + '"]';
+      if (el.getAttribute('aria-label')) return '[aria-label="' + el.getAttribute('aria-label') + '"]';
+      // Fallback: tag + nth-of-type
+      const tag = el.tagName.toLowerCase();
+      const parent = el.parentElement;
+      if (!parent) return tag;
+      const siblings = Array.from(parent.querySelectorAll(':scope > ' + tag));
+      const index = siblings.indexOf(el) + 1;
+      return tag + ':nth-of-type(' + index + ')';
+    };
+    return {
+      tag: el.tagName,
+      id: el.id || null,
+      classes: el.className || null,
+      text: (el.innerText || '').trim().substring(0, 80),
+      placeholder: el.placeholder || null,
+      href: el.href || null,
+      ariaLabel: el.getAttribute('aria-label'),
+      selector: computeSelector(el)
+    };
+  });
+})()
+`;
+```
+
+> **Decision: Cap DOM map at 200 elements.** Qwen2.5-coder:3b has a limited context window. 200 elements with full metadata stays under ~4K tokens, leaving room for the system prompt and response. If a page has 500+ elements, the scraper prioritizes above-the-fold elements first (DOM order is top-to-bottom).
+
+> **Decision: `computeSelector` priority order.** `id` → `data-testid` → `aria-label` → `tag:nth-of-type`. This matches real-world best practices for stable selectors and gives Playwright the most reliable targeting.
+
+---
+
+## 5. Build Sequence
+
+Optimized for a solo developer working fast. Each phase produces a demoable checkpoint.
+
+```mermaid
+graph LR
+    A[Phase 1: Electron Shell] --> B[Phase 2: Browser + DOM]
+    B --> C[Phase 3: Ollama + Chat]
+    C --> D[Phase 4: Flowchart + Toggle]
+    D --> E[Phase 5: Playwright Engine]
+    E --> F[Phase 6: Reports + Evidence]
+    F --> G[Phase 7: Collaboration]
+    G --> H[Phase 8: Polish + Demo Prep]
+```
+
+| Phase | What Gets Built | Demoable Checkpoint |
+|---|---|---|
+| **1. Electron Shell** | Vite+React+Electron scaffold, 3-panel layout with resizable dividers, dark theme, status bar | App opens, shows 3 empty panels in beautiful dark UI |
+| **2. Browser + DOM** | BrowserView integration, URL bar navigation, DOM scrape script, element picker | User loads any website, picker highlights elements |
+| **3. Ollama + Chat** | Ollama health check, model list, streaming generation, chat UI with messages | User types, AI streams response tokens live |
+| **4. Flowchart + Toggle** | React Flow canvas, custom nodes, AI response parsing, code view toggle, Prism.js highlighting | AI generates flowchart + code, user toggles between views |
+| **5. Playwright Engine** | Headless Playwright runner, step-by-step execution, IPC step results, node animation, screenshot capture | Hit "Run", flowchart animates live, failures show screenshots |
+| **6. Reports + Evidence** | PDFKit report generation, evidence folder management, export dialog | Test finishes, PDF auto-generates with screenshots |
+| **7. Collaboration** | Liveblocks integration, room creation/joining, presence avatars, role-based views, internet meter | Two instances share a live session |
+| **8. Polish + Demo Prep** | Error states, loading skeletons, edge cases, animation timing, demo script rehearsal | Entire demo loop runs flawlessly end-to-end |
+
+---
+
+## 6. Risk List — Top 5
+
+### Risk 1: Qwen2.5-coder:3b produces malformed JSON
+
+| | |
+|---|---|
+| **Probability** | HIGH — 3B models frequently break JSON structure |
+| **Impact** | App crashes or shows empty flowchart |
+| **Mitigation** | 1. Wrap AI response parsing in a robust JSON extractor that finds valid JSON within arbitrary text (regex `/{[\s\S]*}/`). 2. If JSON is still broken, retry once with a repair prompt: `"Fix this broken JSON: {raw_response}"`. 3. Show user-friendly error: "AI response couldn't be parsed. Try rephrasing." 4. Log raw response for debugging. |
+| **Code location** | `src/renderer/lib/flowchart-parser.ts` |
+
+### Risk 2: Playwright selectors fail even with real DOM map
+
+| | |
+|---|---|
+| **Probability** | MEDIUM — SPAs mutate DOM, selectors go stale between scrape and execution |
+| **Impact** | Test steps fail with "Element not found" |
+| **Mitigation** | 1. Add `page.waitForSelector(selector, { timeout: 5000 })` before every interaction step. 2. If selector fails, catch and mark step as "failed — element not found" with a descriptive error (not a crash). 3. Consider re-scraping DOM at each step, but defer this to post-V1 for performance. |
+| **Code location** | `src/main/playwright-engine.ts` |
+
+### Risk 3: Ollama not installed or not running
+
+| | |
+|---|---|
+| **Probability** | HIGH — every first-time user will face this |
+| **Impact** | App is 100% non-functional without Ollama |
+| **Mitigation** | 1. On startup, check `http://localhost:11434/api/tags` with a 3-second timeout. 2. If unreachable, show a full-screen overlay: "Ollama is not running" with step-by-step install instructions + a "Retry" button. 3. On Windows, attempt to auto-launch Ollama via `child_process.exec('ollama serve')` in background. 4. Status bar shows a red dot when Ollama is offline, green when connected. |
+| **Code location** | `src/main/ollama-client.ts`, `src/renderer/components/settings/` |
+
+### Risk 4: Electron BrowserView CSP blocks DOM scrape injection
+
+| | |
+|---|---|
+| **Probability** | MEDIUM — strict CSP sites (e.g. banks, Google) block injected scripts |
+| **Impact** | DOM scrape returns empty, AI generates blind tests |
+| **Mitigation** | 1. Use `webContents.executeJavaScript()` on the BrowserView's WebContents — this bypasses page CSP because it runs in the Electron context (privileged). 2. If it still fails (rare), catch and show: "Could not read page elements. The site may block scripting." 3. Allow user to manually describe elements in chat as fallback. |
+| **Code location** | `src/main/browser-view.ts` |
+
+### Risk 5: App bundle size is too large (Playwright + Electron + Chromium)
+
+| | |
+|---|---|
+| **Probability** | HIGH — Chromium alone is ~150MB |
+| **Impact** | Slow installs, large download for expo |
+| **Mitigation** | 1. Use `playwright-core` (not `playwright`) — 3MB vs 400MB. 2. Run `npx playwright install chromium` as a one-time post-install step — Chromium downloads to OS cache, NOT app bundle. 3. In `electron-builder.yml`, exclude Playwright browser binaries from the ASAR archive. 4. For expo, pre-install everything on the demo laptop. Bundle size is only a problem if distributing publicly (post-V1 concern). |
+| **Code location** | `scripts/install-playwright.js`, `electron-builder.yml` |
+
+---
+
+## 7. Day-by-Day Build Plan (8 Days)
+
+> **Context:** Expo is March 2–3, 2026. Today is Feb 24. That gives exactly **6 full build days + 2 expo days**. The plan below is compressed to fit.
+
+---
+
+### Day 1 (Feb 24) — Skeleton + Shell + 3-Panel Layout
+
+**Goal:** Open the app and see a beautiful, professional-looking 3-panel layout.
+
+| # | Task | Time |
+|---|---|---|
+| 1 | `npm init`, install all deps, configure Vite + Electron + TypeScript + Tailwind | 1.5h |
+| 2 | Create `src/main/index.ts` — Electron BrowserWindow + preload | 1h |
+| 3 | Create renderer scaffold: `App.tsx`, `ThreePanelLayout.tsx` using allotment | 1.5h |
+| 4 | Apply dark theme: `#0a0a0f` background, panel borders, Inter + JetBrains Mono fonts | 1h |
+| 5 | Build `StatusBar.tsx` — placeholder model indicator + internet meter | 0.5h |
+| 6 | Verify: `npm run dev` opens Electron, 3 resizable panels visible, dark theme applied | 0.5h |
+
+**Checkpoint:** App launches. 3 dark panels. Resizable. Looks professional.
+
+---
+
+### Day 2 (Feb 25) — Embedded Browser + DOM Scraping + Element Picker
+
+**Goal:** User can browse any website inside the app. DOM scrape works. Element picker highlights.
+
+| # | Task | Time |
+|---|---|---|
+| 1 | Implement `browser-view.ts` — BrowserView creation, attach to left panel | 1.5h |
+| 2 | Build `EmbeddedBrowser.tsx` — URL bar with navigate button, back/forward, reload | 1h |
+| 3 | Wire IPC: `browser:navigate`, `browser:get-url` | 0.5h |
+| 4 | Implement `dom-scrape-script.ts` + `dom:scrape` IPC handler | 1h |
+| 5 | Build `ElementPicker.tsx` — inject highlight script, blue outline on hover, selector tooltip | 1.5h |
+| 6 | Wire `picker:start`, `picker:stop`, `picker:element-selected` IPC channels | 0.5h |
+| 7 | Verify: navigate to any site, run DOM scrape, see JSON output in console. Picker highlights elements | 0.5h |
+
+**Checkpoint:** Browse real websites. Scrape returns real selectors. Picker works.
+
+---
+
+### Day 3 (Feb 26) — Ollama Integration + Chat UI + AI Streaming
+
+**Goal:** User types a test description, AI streams back a response in real time.
+
+| # | Task | Time |
+|---|---|---|
+| 1 | Build `ollama-client.ts` — health check, model list fetch, streaming generate | 1.5h |
+| 2 | Wire IPC: `ollama:health`, `ollama:list-models`, `ollama:generate`, `ollama:generate:token` | 1h |
+| 3 | Build `ChatPanel.tsx`, `ChatInput.tsx`, `ChatMessage.tsx`, `StreamingIndicator.tsx` | 2h |
+| 4 | Create `chatStore.ts` — messages array, streaming state, add/update message | 0.5h |
+| 5 | Build `prompt-builder.ts` — assemble system prompt + DOM map + user intent | 1h |
+| 6 | Build `ModelSwitcher.tsx` in `SettingsModal.tsx` — fetch + display models | 0.5h |
+| 7 | Wire status bar: active model name, Ollama online/offline indicator | 0.5h |
+| 8 | Verify: type test description → DOM scrape triggers → prompt builds → AI streams tokens into chat | 0.5h |
+
+**Checkpoint:** Full AI loop works. User types → AI responds token by token.
+
+---
+
+### Day 4 (Feb 27) — React Flow Flowchart + Code Toggle + AI Response Parsing
+
+**Goal:** AI response parses into a flowchart that renders. Code view toggle works.
+
+| # | Task | Time |
+|---|---|---|
+| 1 | Build `flowchart-parser.ts` — extract JSON from AI response, validate, transform to React Flow format | 1.5h |
+| 2 | Create `testStore.ts` — nodes, edges, code, step statuses, session metadata | 1h |
+| 3 | Build custom nodes: `ActionNode.tsx` + `AssertionNode.tsx` — styled for 4 states (pending/running/passed/failed) | 1.5h |
+| 4 | Build `FlowchartCanvas.tsx` — React Flow with auto-layout (dagre), custom nodes | 1h |
+| 5 | Build `CodeView.tsx` — Prism.js highlighted Playwright code | 0.5h |
+| 6 | Build `ViewToggle.tsx` — Flowchart ↔ Code toggle button, top-right position | 0.5h |
+| 7 | Build `ProgressBar.tsx` — steps completed / total, animated bar | 0.5h |
+| 8 | Verify: send test description → AI responds → flowchart renders with nodes/edges → toggle shows code | 0.5h |
+
+> **Decision: Use dagre for auto-layout.** React Flow doesn't auto-layout nodes. Install `dagre` (~15KB) to compute vertical tree layout positions. This ensures flowcharts are always clean regardless of how many nodes the AI generates.
+
+**Additional dep:** `dagre` (^0.8.5) + `@types/dagre`
+
+**Checkpoint:** Full visual pipeline. Describe test → see flowchart + code.
+
+---
+
+### Day 5 (Feb 28) — Playwright Execution Engine + Live Animation
+
+**Goal:** Click "Run" → flowchart animates live → failures show screenshots.
+
+| # | Task | Time |
+|---|---|---|
+| 1 | Build `playwright-engine.ts` — parse Playwright code, execute step-by-step, capture results | 2.5h |
+| 2 | Wire `test:start`, `test:step-result`, `test:complete`, `test:abort` IPC channels | 1h |
+| 3 | Build `useTestExecution.ts` hook — orchestrate run lifecycle, update testStore per step | 1h |
+| 4 | Add node state animations: blue pulse (running), green checkmark (passed), red X + thumbnail (failed) | 1h |
+| 5 | Implement screenshot capture on failure — save to temp folder, send path to renderer | 0.5h |
+| 6 | Build `evidence-manager.ts` — manage temp folder, write error logs as structured JSON | 0.5h |
+| 7 | Add "Run" button to FlowchartPanel, disable during execution, "Abort" button appears during run | 0.5h |
+| 8 | Verify: describe test → AI generates → click Run → nodes animate → failures show screenshots | 1h |
+
+> **Architect note on Playwright step-by-step execution:** The AI generates a single Playwright script. To execute step-by-step without using `eval()`, the engine will inject `console.log('STEP_RESULT:', JSON.stringify({ stepIndex, status, error }))` statements after each `await page.` call in the generated code. This modified code will be written to a temporary `.js` file on disk, which is then executed as a standalone process using `child_process.spawn('node', [tempFilePath])`. The stdout/stderr streams will be captured line-by-line; lines starting with `STEP_RESULT:` will be parsed to emit `test:step-result` IPC events back to the renderer, allowing the flowchart nodes to animate live.
+
+**Checkpoint:** The money shot. Live flowchart animation during test execution.
+
+---
+
+### Day 6 (Mar 1) — PDF Reports + Collaboration + Internet Meter
+
+**Goal:** Reports auto-generate. Two instances can share a session.
+
+| # | Task | Time |
+|---|---|---|
+| 1 | Build `report-generator.ts` — PDFKit doc with header, step table, screenshots, code appendix | 2h |
+| 2 | Wire `report:generate` + `report:export` IPC, native save dialog | 0.5h |
+| 3 | Build `ReportActions.tsx` — auto-generate on test complete, "Export" button | 0.5h |
+| 4 | Configure Liveblocks: `liveblocks.config.ts`, RoomProvider, Storage + Presence types | 1h |
+| 5 | Build `CollabProvider.tsx`, `InviteModal.tsx`, `JoinModal.tsx` | 1h |
+| 6 | Build `PresenceAvatars.tsx` — colored dots, name tooltips | 0.5h |
+| 7 | Build `RoleGate.tsx` — conditional rendering based on role (Owner/Developer/TeamLead/Client) | 0.5h |
+| 8 | Wire internet meter in StatusBar — track Liveblocks WebSocket bytes | 0.5h |
+| 9 | Verify: test run → PDF generates → open 2 instances → join same room → presence shows | 0.5h |
+
+**Checkpoint:** Complete feature set. Reports work. Collaboration works.
+
+---
+
+### Day 7 (Mar 2 — Expo Day 1) — Polish + Error States + Demo Prep
+
+**Goal:** Every edge case handled. Demo script rehearsed 5 times.
+
+| # | Task | Time |
+|---|---|---|
+| 1 | Add Ollama-not-running overlay with instructions + retry button | 0.5h |
+| 2 | Add loading skeletons for chat messages and flowchart | 0.5h |
+| 3 | Add empty states: "No test running", "Type a test description to begin" | 0.5h |
+| 4 | Handle AI malformed JSON — retry logic + user-friendly error message | 0.5h |
+| 5 | Add keyboard shortcuts: Enter to send message, Ctrl+R to run test | 0.5h |
+| 6 | Final CSS pass: padding, alignment, font sizes, border radii, animation timing | 1h |
+| 7 | Pre-install Ollama + Qwen on demo laptop, verify offline works | 0.5h |
+| 8 | Rehearse 3-minute demo script 5 times, time it, refine pacing | 1h |
+| 9 | Prepare backup: record a video of the full demo in case of live failure | 0.5h |
+
+**Checkpoint:** Demo-ready. All error states handled. Rehearsed.
+
+---
+
+### Day 8 (Mar 3 — Expo Day 2) — Live Demo + Iterate
+
+**Goal:** Win "Best CS Software Project."
+
+| # | Task | Time |
+|---|---|---|
+| 1 | Morning: one final test run on the demo laptop, all features verified | 0.5h |
+| 2 | Fix any last-minute bugs found during morning check | 1h |
+| 3 | Expo demos: run the 3-minute loop for every judge | All day |
+| 4 | Between demos: note any feedback, make quick tweaks if needed | Ongoing |
+
+---
+
+## Appendix A: Key Architecture Diagram
+
+```mermaid
+graph TB
+    subgraph Renderer["Renderer Process (React + Vite)"]
+        UI[Three Panel Layout]
+        BV[Embedded Browser Component]
+        Chat[Chat Panel]
+        FC[Flowchart Canvas]
+        CV[Code View]
+        Store[(Zustand Stores)]
+    end
+
+    subgraph Main["Main Process (Node.js)"]
+        IPC[IPC Handlers]
+        PW[Playwright Engine]
+        OC[Ollama Client]
+        RG[Report Generator]
+        EM[Evidence Manager]
+        BWV[BrowserView Controller]
+    end
+
+    subgraph External["External Services"]
+        Ollama[Ollama Server\nlocalhost:11434]
+        LB[Liveblocks Cloud]
+    end
+
+    UI <-->|Electron IPC| IPC
+    IPC --> PW
+    IPC --> OC
+    IPC --> RG
+    IPC --> EM
+    IPC --> BWV
+
+    OC <-->|HTTP localhost| Ollama
+    UI <-->|WebSocket| LB
+
+    BWV -->|executeJavaScript| BV
+
+    PW -->|step results| IPC
+    RG -->|PDF path| IPC
+```
+
+## Appendix B: Flowchart Node State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> Pending : Node created
+    Pending --> Running : Execution reaches this step
+    Running --> Passed : Step succeeds
+    Running --> Failed : Step throws error
+    Passed --> [*]
+    Failed --> [*]
+```
+
+| State | Color | Icon | Animation |
+|---|---|---|---|
+| Pending | `#374151` (grey-700) | None | None |
+| Running | `#3b82f6` (blue-500) | Spinner | 200ms pulse |
+| Passed | `#22c55e` (green-500) | ✓ Checkmark | 200ms fade-in |
+| Failed | `#ef4444` (red-500) | ✗ X mark | 200ms fade-in + screenshot thumbnail |
+
+## Appendix C: Preload Script API Surface
+
+The preload script exposes this exact API to the renderer via `contextBridge`:
+
+```typescript
+// src/main/preload.ts
+contextBridge.exposeInMainWorld('electronAPI', {
+  // Ollama
+  ollamaHealth: () => ipcRenderer.invoke('ollama:health'),
+  ollamaListModels: () => ipcRenderer.invoke('ollama:list-models'),
+  ollamaGenerate: (model: string, prompt: string) => ipcRenderer.invoke('ollama:generate', { model, prompt }),
+  onOllamaToken: (cb: (data: { token: string; done: boolean }) => void) =>
+    ipcRenderer.on('ollama:generate:token', (_, data) => cb(data)),
+  onOllamaError: (cb: (data: { error: string }) => void) =>
+    ipcRenderer.on('ollama:generate:error', (_, data) => cb(data)),
+
+  // Browser
+  browserNavigate: (url: string) => ipcRenderer.invoke('browser:navigate', { url }),
+  browserGetUrl: () => ipcRenderer.invoke('browser:get-url'),
+
+  // DOM
+  domScrape: () => ipcRenderer.invoke('dom:scrape'),
+
+  // Test Execution
+  testStart: (payload: { code: string; url: string; steps: any[] }) =>
+    ipcRenderer.invoke('test:start', payload),
+  testAbort: () => ipcRenderer.invoke('test:abort'),
+  onTestStepResult: (cb: (data: any) => void) =>
+    ipcRenderer.on('test:step-result', (_, data) => cb(data)),
+  onTestComplete: (cb: (data: any) => void) =>
+    ipcRenderer.on('test:complete', (_, data) => cb(data)),
+
+  // Reports
+  reportGenerate: (session: any) => ipcRenderer.invoke('report:generate', { session }),
+  reportExport: (pdfPath: string) => ipcRenderer.invoke('report:export', { pdfPath }),
+
+  // Evidence
+  openFolder: (folderPath: string) => ipcRenderer.invoke('evidence:open-folder', { folderPath }),
+
+  // Element Picker
+  pickerStart: () => ipcRenderer.invoke('picker:start'),
+  pickerStop: () => ipcRenderer.invoke('picker:stop'),
+  onPickerElement: (cb: (data: any) => void) =>
+    ipcRenderer.on('picker:element-selected', (_, data) => cb(data)),
+});
+```
+
+---
+
+## Verification Plan
+
+Since this is an architecture blueprint (no code yet), verification will occur during execution:
+
+### Build Verification (per phase)
+- After each Day/Phase, run `npm run dev` to verify the Electron app launches without errors
+- After Day 3: verify Ollama streaming by typing a test description and confirming tokens stream in
+- After Day 5: run a complete test against a simple static HTML page and verify all nodes animate correctly
+
+### Demo Verification (Day 7)
+- Run the full 14-step demo loop described in the master prompt
+- Record a screen capture of the entire loop as backup
+- Verify on the actual expo demo laptop with all dependencies pre-installed
+
+### Manual Verification Checklist
+1. Launch app → 3 panels visible, dark theme correct
+2. Navigate to any URL → page loads in embedded browser
+3. Run DOM scrape → console shows element JSON
+4. Pick element → blue highlight appears, selector shown
+5. Type test description → AI streams response
+6. Flowchart renders with correct nodes/edges
+7. Toggle to code view → Playwright code highlighted
+8. Click Run → nodes animate blue → green/red
+9. Failed step shows screenshot thumbnail
+10. PDF report generates with all sections
+11. Open 2nd instance → join room → presence avatars show
+12. Internet meter shows bytes only during collaboration

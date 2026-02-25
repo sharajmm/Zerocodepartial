@@ -1,0 +1,23 @@
+src/main/index.ts(9,7): error TS6133: 'isDev' is declared but its value is never read.
+src/main/index.ts(42,51): error TS6133: 'event' is declared but its value is never read.
+src/main/index.ts(43,21): error TS2339: Property 'level' does not exist on type 'number'.
+src/main/index.ts(44,57): error TS2339: Property 'message' does not exist on type 'number'.
+src/main/index.ts(44,79): error TS2339: Property 'sourceId' does not exist on type 'number'.
+src/main/index.ts(44,99): error TS2339: Property 'line' does not exist on type 'number'.
+src/renderer/components/chat/ChatInput.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/renderer/components/collaboration/CollabProvider.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/renderer/components/collaboration/InviteModal.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/renderer/components/collaboration/JoinModal.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/renderer/components/collaboration/PresenceAvatars.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/renderer/components/collaboration/RoleGate.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/renderer/components/flowchart/CodeView.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/renderer/components/flowchart/FlowchartCanvas.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/renderer/components/flowchart/FlowchartPanel.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/renderer/components/flowchart/nodes/ActionNode.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/renderer/components/flowchart/nodes/AssertionNode.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/renderer/components/flowchart/ProgressBar.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/renderer/components/flowchart/ViewToggle.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/renderer/components/report/ReportActions.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/renderer/components/settings/SettingsModal.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/renderer/hooks/useOllamaStream.ts(16,15): error TS6133: '_t' is declared but its value is never read.
+src/renderer/hooks/useOllamaStream.ts(36,15): error TS6133: '_e' is declared but its value is never read.
