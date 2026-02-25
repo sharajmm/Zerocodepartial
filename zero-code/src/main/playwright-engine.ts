@@ -1,7 +1,6 @@
 import { spawn, ChildProcess } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as os from 'os';
 import { BrowserWindow } from 'electron';
 import { IPC } from '../shared/constants';
 import { EvidenceManager } from './evidence-manager';
@@ -57,9 +56,20 @@ function expect(locator) {
 
 (async () => {
     let currentStepProps = { stepIndex: 0, status: 'running' };
-    const browser = await chromium.launch({ headless: false });
-    const context = await browser.newContext();
-    const page = await context.newPage();
+    
+    // Connect to the embedded ZeroCode Electron browser instead of launching a new one
+    const browser = await chromium.connectOverCDP('http://localhost:9222');
+    const context = browser.contexts()[0];
+    
+    // Find the BrowserView page (filter out the main ZeroCode UI)
+    let page = context.pages().find(p => {
+        const u = p.url();
+        return u && !u.includes('localhost:5173') && !u.includes('dist/index.html');
+    });
+    
+    if (!page) {
+        page = context.pages()[0] || await context.newPage();
+    }
     
     // Listen for step results logic is embedded in the try block
     try {

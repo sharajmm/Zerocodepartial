@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import "os";
 const IPC = {
   OLLAMA_HEALTH: "ollama:health",
   OLLAMA_LIST_MODELS: "ollama:list-models",
@@ -332,8 +331,8 @@ class OllamaClient {
           options: {
             temperature: 0.1,
             // Lower temperature for more deterministic, code-focused output
-            num_ctx: 32768
-            // Increase context window size to handle larger DOM maps
+            num_ctx: 1e4
+            // Optimize context window for average DOM parsing without lagging system
           }
         })
       });
@@ -441,9 +440,20 @@ function expect(locator) {
 
 (async () => {
     let currentStepProps = { stepIndex: 0, status: 'running' };
-    const browser = await chromium.launch({ headless: false });
-    const context = await browser.newContext();
-    const page = await context.newPage();
+    
+    // Connect to the embedded ZeroCode Electron browser instead of launching a new one
+    const browser = await chromium.connectOverCDP('http://localhost:9222');
+    const context = browser.contexts()[0];
+    
+    // Find the BrowserView page (filter out the main ZeroCode UI)
+    let page = context.pages().find(p => {
+        const u = p.url();
+        return u && !u.includes('localhost:5173') && !u.includes('dist/index.html');
+    });
+    
+    if (!page) {
+        page = context.pages()[0] || await context.newPage();
+    }
     
     // Listen for step results logic is embedded in the try block
     try {
@@ -577,7 +587,6 @@ function registerIpcHandlers(_mainWindow, browserViewController2, ollamaClient2)
   });
 }
 const __dirname$1 = path$1.dirname(fileURLToPath(import.meta.url));
-process.env.NODE_ENV !== "production";
 let mainWindow = null;
 let browserViewController = null;
 let ollamaClient = null;
@@ -606,9 +615,9 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path$1.join(__dirname$1, "../dist/index.html"));
   }
-  mainWindow.webContents.on("console-message", (event, details) => {
-    if (details.level >= 2) {
-      console.error(`[Renderer Console] ${details.message} at ${details.sourceId}:${details.line}`);
+  mainWindow.webContents.on("console-message", (_event, level, message, line, sourceId) => {
+    if (level >= 2) {
+      console.error(`[Renderer Console] ${message} at ${sourceId}:${line}`);
     }
   });
   browserViewController = new BrowserViewController(mainWindow);
@@ -616,6 +625,7 @@ function createWindow() {
   ollamaClient = new OllamaClient(mainWindow);
   registerIpcHandlers(mainWindow, browserViewController, ollamaClient);
 }
+app.commandLine.appendSwitch("remote-debugging-port", "9222");
 app.whenReady().then(() => {
   createWindow();
   app.on("activate", () => {

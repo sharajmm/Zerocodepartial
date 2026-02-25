@@ -1,1 +1,1 @@
-import React from 'react'; export default function Placeholder() { return <></>; }
+export default function Placeholder() { return <></>; }

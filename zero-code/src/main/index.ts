@@ -6,7 +6,6 @@ import { OllamaClient } from './ollama-client';
 import { registerIpcHandlers } from './ipc-handlers';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const isDev = process.env.NODE_ENV !== 'production';
 
 let mainWindow: BrowserWindow | null = null;
 let browserViewController: BrowserViewController | null = null;
@@ -39,9 +38,9 @@ function createWindow() {
         mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
     }
 
-    mainWindow.webContents.on('console-message', (event, details) => {
-        if (details.level >= 2) {
-            console.error(`[Renderer Console] ${details.message} at ${details.sourceId}:${details.line}`);
+    mainWindow.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+        if (level >= 2) {
+            console.error(`[Renderer Console] ${message} at ${sourceId}:${line}`);
         }
     });
 
@@ -50,6 +49,8 @@ function createWindow() {
     ollamaClient = new OllamaClient(mainWindow);
     registerIpcHandlers(mainWindow, browserViewController, ollamaClient);
 }
+
+app.commandLine.appendSwitch('remote-debugging-port', '9222');
 
 app.whenReady().then(() => {
     createWindow();

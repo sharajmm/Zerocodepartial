@@ -45,7 +45,7 @@ export class OllamaClient {
                     stream: true,
                     options: {
                         temperature: 0.1, // Lower temperature for more deterministic, code-focused output
-                        num_ctx: 32768    // Increase context window size to handle larger DOM maps
+                        num_ctx: 10000    // Optimize context window for average DOM parsing without lagging system
                     }
                 }),
             });
