@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useTestStore } from '../../store/testStore';
 import { useBrowserStore } from '../../store/browserStore';
 import { useChatStore } from '../../store/chatStore';
+import { useWorkspaceStore } from '../../store/workspaceStore';
 import type { TestSession } from '../../types/test';
 import { FileText, FolderOpen, Download, FileCheck, Loader2 } from 'lucide-react';
 
 export default function ReportActions() {
     const { nodes, stepStatuses, screenshotPaths, code, sessionId, lastReportPath, setLastReportPath, isRunning } = useTestStore();
     const currentUrl = useBrowserStore(state => state.currentUrl);
+    const activeFolder = useWorkspaceStore(state => state.activeFolder);
     const chatState = useChatStore();
 
     const [isGenerating, setIsGenerating] = useState(false);
@@ -52,8 +54,9 @@ export default function ReportActions() {
                 steps,
                 code,
                 totalPassed: passed,
-                totalFailed: failed
-            };
+                totalFailed: failed,
+                activeFolder: activeFolder || undefined
+            } as any;
 
             const { pdfPath } = await window.electronAPI.reportGenerate(session);
             setLastReportPath(pdfPath);

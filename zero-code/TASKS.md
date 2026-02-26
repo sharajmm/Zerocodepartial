@@ -77,3 +77,14 @@
 - [x] Wire functional `Home`, `Back`, `Forward`, and `Reload` browser controls to electronAPI
 - [x] Minimize Chat Panel component footprint (reduce padding, shrink fonts, merge duplicate execute actions)
 - [x] Re-align `FlowchartPanel` Progress bar padding `pr-[280px]` so test buttons are fully clickable
+
+## Phase 11: RTM Upload, Workspace Management & File Routing
+- [x] Create `workspaceStore.ts` with activeFolder, RTM tasks, and task status management
+- [x] Add IPC handlers for folder dialog (`workspace:open-folder`), file read/write, RTM upload
+- [x] Build `RTMTaskPanel.tsx` with upload, smart parsing (JSON/CSV/line-based), and per-task run buttons
+- [x] Integrate "Open Folder" button with active folder display in TopBar
+- [x] Block RTM upload when no workspace folder is open
+- [x] Save uploaded RTM and generated `tasks.json` into active workspace folder
+- [x] Route generated reports/PDFs to active workspace folder via `EvidenceManager`
+- [x] Route error screenshots and test docs to `C:\zerocode\errors` when no folder is open
+- [x] Pass `activeFolder` through report generation pipeline (ReportActions → IPC → EvidenceManager → report-generator)

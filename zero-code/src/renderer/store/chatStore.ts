@@ -50,7 +50,24 @@ export const useChatStore = create<ChatState>()(
             isStreaming: false,
         })),
 
-        clearChat: () => set({ messages: [], isStreaming: false }),
+        clearChat: () => {
+            // Archive the current session before clearing
+            const currentMessages = useChatStore.getState().messages;
+            if (currentMessages.length > 0 && typeof window !== 'undefined' && window.electronAPI) {
+                // Save current session as a timestamped archive
+                const firstUserMsg = currentMessages.find(m => m.role === 'user');
+                const excerpt = firstUserMsg ? firstUserMsg.content.substring(0, 50) : 'Session';
+                const sessionData = {
+                    id: Date.now().toString(),
+                    date: new Date().toISOString(),
+                    excerpt,
+                    messages: currentMessages
+                };
+                const fileName = `session-${Date.now()}.json`;
+                window.electronAPI.workspaceSaveFile(`C:\\zerocode\\history\\${fileName}`, JSON.stringify(sessionData, null, 2)).catch(() => {});
+            }
+            set({ messages: [], isStreaming: false });
+        },
     })
 );
 

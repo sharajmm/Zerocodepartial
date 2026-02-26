@@ -3,11 +3,11 @@ import fs from 'fs';
 import path from 'path';
 import { EvidenceManager } from './evidence-manager';
 
-export async function generateReport(session: any): Promise<string> {
+export async function generateReport(session: any, activeFolder?: string): Promise<string> {
     return new Promise((resolve, reject) => {
         try {
             const document = new PDFDocument({ margin: 50, bufferPages: true });
-            const evidenceDir = EvidenceManager.getEvidenceDir(session.sessionId);
+            const evidenceDir = EvidenceManager.getEvidenceDir(session.sessionId, activeFolder);
             const pdfPath = path.join(evidenceDir, `Report-${session.sessionId}.pdf`);
             const stream = fs.createWriteStream(pdfPath);
 

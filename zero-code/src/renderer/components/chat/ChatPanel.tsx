@@ -4,6 +4,7 @@ import { useCollabStore } from '../../store/collabStore';
 import ElementPicker from '../browser/ElementPicker';
 import ChatMessageBubble from './ChatMessage';
 import ReportActions from '../report/ReportActions';
+import RTMTaskPanel from '../workspace/RTMTaskPanel';
 import { useOllamaStream } from '../../hooks/useOllamaStream';
 import { useRef, useState, useEffect } from 'react';
 import { PlusCircle, Trash2 } from 'lucide-react';
@@ -85,6 +86,7 @@ export default function ChatPanel() {
             </div>
 
             <ReportActions />
+            <RTMTaskPanel />
 
             {/* Messages Window */}
             <div className="flex-1 bg-gray-950 border border-gray-800 rounded-md flex flex-col p-2 overflow-y-auto mb-2 gap-2">

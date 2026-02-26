@@ -19,7 +19,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // History
     historySave: (messages: any[]) => ipcRenderer.invoke(IPC.HISTORY_SAVE, messages),
-    historyLoad: () => ipcRenderer.invoke(IPC.HISTORY_LOAD),
+    historyLoad: (sessionFile?: string) => ipcRenderer.invoke(IPC.HISTORY_LOAD, sessionFile),
+    historyList: () => ipcRenderer.invoke(IPC.HISTORY_LIST),
 
     // DOM
     domScrape: () => ipcRenderer.invoke(IPC.DOM_SCRAPE),
@@ -62,6 +63,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Local Collab
     roomHost: () => ipcRenderer.invoke(IPC.ROOM_HOST),
     roomStop: () => ipcRenderer.invoke(IPC.ROOM_STOP),
+
+    // Workspace
+    workspaceOpenFolder: () => ipcRenderer.invoke(IPC.WORKSPACE_OPEN_FOLDER),
+    workspaceReadFile: (filePath: string) => ipcRenderer.invoke(IPC.WORKSPACE_READ_FILE, filePath),
+    workspaceSaveFile: (filePath: string, content: string) => ipcRenderer.invoke(IPC.WORKSPACE_SAVE_FILE, { filePath, content }),
+    workspaceUploadRtm: () => ipcRenderer.invoke(IPC.WORKSPACE_UPLOAD_RTM),
 
     removeAllListeners: (channel: string) => {
         ipcRenderer.removeAllListeners(channel);

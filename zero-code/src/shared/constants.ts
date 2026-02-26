@@ -29,6 +29,11 @@ export const IPC = {
     ROOM_STOP: 'room:stop',
     HISTORY_SAVE: 'history:save',
     HISTORY_LOAD: 'history:load',
+    HISTORY_LIST: 'history:list',
+    WORKSPACE_OPEN_FOLDER: 'workspace:open-folder',
+    WORKSPACE_READ_FILE: 'workspace:read-file',
+    WORKSPACE_SAVE_FILE: 'workspace:save-file',
+    WORKSPACE_UPLOAD_RTM: 'workspace:upload-rtm',
 } as const;
 
 export const DEFAULT_MODEL = 'sharaj:7b';

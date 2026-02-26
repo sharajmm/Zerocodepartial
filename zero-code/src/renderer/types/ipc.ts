@@ -16,7 +16,8 @@ export interface ElectronAPI {
 
     // History
     historySave: (messages: any[]) => Promise<void>;
-    historyLoad: () => Promise<any[]>;
+    historyLoad: (sessionFile?: string) => Promise<any[]>;
+    historyList: () => Promise<{ id: string; date: string; excerpt: string; filePath: string }[]>;
 
     // DOM
     domScrape: () => Promise<{ elements: DOMElement[] }>;
@@ -47,6 +48,12 @@ export interface ElectronAPI {
     // Collab
     roomHost: () => Promise<string>;
     roomStop: () => Promise<void>;
+
+    // Workspace
+    workspaceOpenFolder: () => Promise<string | null>;
+    workspaceReadFile: (filePath: string) => Promise<string>;
+    workspaceSaveFile: (filePath: string, content: string) => Promise<void>;
+    workspaceUploadRtm: () => Promise<{ fileName: string; content: string } | null>;
 
     // Clean up listeners
     removeAllListeners: (channel: string) => void;

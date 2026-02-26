@@ -50,7 +50,12 @@ const IPC = {
   ROOM_HOST: "room:host",
   ROOM_STOP: "room:stop",
   HISTORY_SAVE: "history:save",
-  HISTORY_LOAD: "history:load"
+  HISTORY_LOAD: "history:load",
+  HISTORY_LIST: "history:list",
+  WORKSPACE_OPEN_FOLDER: "workspace:open-folder",
+  WORKSPACE_READ_FILE: "workspace:read-file",
+  WORKSPACE_SAVE_FILE: "workspace:save-file",
+  WORKSPACE_UPLOAD_RTM: "workspace:upload-rtm"
 };
 const OLLAMA_BASE_URL = "http://localhost:11434";
 const DOM_SCRAPE_SCRIPT = `
@@ -432,6 +437,7 @@ class OllamaClient {
       const decoder = new TextDecoder();
       let done = false;
       let buffer = "";
+      let doneSent = false;
       while (!done) {
         const { value, done: streamDone } = await reader.read();
         done = streamDone;
@@ -444,7 +450,10 @@ class OllamaClient {
             try {
               const data = JSON.parse(line);
               if (data.done) {
-                this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: "", done: true });
+                if (!doneSent) {
+                  this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: "", done: true });
+                  doneSent = true;
+                }
               } else {
                 this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: data.message?.content || "", done: false });
               }
@@ -458,14 +467,19 @@ class OllamaClient {
         try {
           const data = JSON.parse(buffer);
           if (data.done) {
-            this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: "", done: true });
+            if (!doneSent) {
+              this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: "", done: true });
+              doneSent = true;
+            }
           } else {
             this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: data.message?.content || "", done: false });
           }
         } catch (err) {
         }
       }
-      this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: "", done: true });
+      if (!doneSent) {
+        this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: "", done: true });
+      }
     } catch (e) {
       console.error("Ollama generate error:", e);
       this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_ERROR, { error: e.message });
@@ -473,21 +487,40 @@ class OllamaClient {
   }
 }
 class EvidenceManager {
-  static getEvidenceDir(sessionId) {
-    const baseDir = "C:\\zerocode\\reports";
+  // If activeFolder is provided, use it. Otherwise use C:\zerocode\reports (for reports) or C:\zerocode\errors (for errors)
+  static getEvidenceDir(sessionId, activeFolder) {
+    let baseDir;
+    if (activeFolder) {
+      baseDir = activeFolder;
+    } else {
+      baseDir = "C:\\zerocode\\reports";
+    }
     const sessionDir = path.join(baseDir, sessionId);
     if (!fs.existsSync(sessionDir)) {
       fs.mkdirSync(sessionDir, { recursive: true });
     }
     return sessionDir;
   }
-  static saveErrorLog(sessionId, logData) {
-    const sessionDir = this.getEvidenceDir(sessionId);
+  static getErrorDir(activeFolder) {
+    const dir = activeFolder || "C:\\zerocode\\errors";
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    return dir;
+  }
+  static saveErrorScreenshot(screenshotBuffer, fileName, activeFolder) {
+    const dir = this.getErrorDir(activeFolder);
+    const filePath = path.join(dir, fileName);
+    fs.writeFileSync(filePath, screenshotBuffer);
+    return filePath;
+  }
+  static saveErrorLog(sessionId, logData, activeFolder) {
+    const sessionDir = this.getEvidenceDir(sessionId, activeFolder);
     const logPath = path.join(sessionDir, `error-${sessionId}.json`);
     fs.writeFileSync(logPath, JSON.stringify(logData, null, 2));
   }
-  static writeSessionLog(sessionId, session2) {
-    const sessionDir = this.getEvidenceDir(sessionId);
+  static writeSessionLog(sessionId, session2, activeFolder) {
+    const sessionDir = this.getEvidenceDir(sessionId, activeFolder);
     const logPath = path.join(sessionDir, `session-${sessionId}.json`);
     fs.writeFileSync(logPath, JSON.stringify(session2, null, 2));
   }
@@ -155961,11 +155994,11 @@ mixin(AttachmentsMixin);
 mixin(SubsetMixin);
 mixin(TableMixin);
 PDFDocument.LineWrapper = LineWrapper;
-async function generateReport(session2) {
+async function generateReport(session2, activeFolder) {
   return new Promise((resolve, reject) => {
     try {
       const document = new PDFDocument({ margin: 50, bufferPages: true });
-      const evidenceDir = EvidenceManager.getEvidenceDir(session2.sessionId);
+      const evidenceDir = EvidenceManager.getEvidenceDir(session2.sessionId, activeFolder);
       const pdfPath = path__default.join(evidenceDir, `Report-${session2.sessionId}.pdf`);
       const stream2 = fs__default.createWriteStream(pdfPath);
       document.pipe(stream2);
@@ -160055,8 +160088,9 @@ function registerIpcHandlers(_mainWindow, browserViewController2, ollamaClient2)
   });
   ipcMain.handle(IPC.REPORT_GENERATE, async (_, session2) => {
     try {
-      EvidenceManager.writeSessionLog(session2.sessionId, session2);
-      const pdfPath = await generateReport(session2);
+      const activeFolder = session2.activeFolder || null;
+      EvidenceManager.writeSessionLog(session2.sessionId, session2, activeFolder);
+      const pdfPath = await generateReport(session2, activeFolder);
       return { pdfPath };
     } catch (error) {
       console.error("Failed to generate report:", error);
@@ -160082,28 +160116,113 @@ function registerIpcHandlers(_mainWindow, browserViewController2, ollamaClient2)
   ipcMain.handle(IPC.ROOM_STOP, () => {
     stopRoom();
   });
+  const HISTORY_DIR = path__default.join("C:", "zerocode", "history");
   ipcMain.handle(IPC.HISTORY_SAVE, async (_, messages) => {
     try {
-      const historyDir = "C:\\zerocode\\history";
-      if (!fs__default.existsSync(historyDir)) {
-        fs__default.mkdirSync(historyDir, { recursive: true });
+      if (!fs__default.existsSync(HISTORY_DIR)) {
+        fs__default.mkdirSync(HISTORY_DIR, { recursive: true });
       }
-      fs__default.writeFileSync(`${historyDir}\\chat-history.json`, JSON.stringify(messages, null, 2));
+      fs__default.writeFileSync(path__default.join(HISTORY_DIR, "chat-history.json"), JSON.stringify(messages, null, 2));
+      if (messages && messages.length > 0) {
+        const firstUserMsg = messages.find((m) => m.role === "user");
+        const excerpt = firstUserMsg ? firstUserMsg.content.substring(0, 50) : "Session";
+        const sessionData = {
+          id: Date.now().toString(),
+          date: (/* @__PURE__ */ new Date()).toISOString(),
+          excerpt,
+          messages
+        };
+        fs__default.writeFileSync(path__default.join(HISTORY_DIR, "session-active.json"), JSON.stringify(sessionData, null, 2));
+      }
     } catch (error) {
       console.error("Failed to save history:", error);
     }
   });
-  ipcMain.handle(IPC.HISTORY_LOAD, async () => {
+  ipcMain.handle(IPC.HISTORY_LOAD, async (_, sessionFile) => {
     try {
-      const historyFile = "C:\\zerocode\\history\\chat-history.json";
-      if (fs__default.existsSync(historyFile)) {
-        const data = fs__default.readFileSync(historyFile, "utf8");
-        return JSON.parse(data);
+      const filePath = sessionFile || path__default.join(HISTORY_DIR, "chat-history.json");
+      if (fs__default.existsSync(filePath)) {
+        const data = fs__default.readFileSync(filePath, "utf8");
+        const parsed = JSON.parse(data);
+        if (parsed.messages && Array.isArray(parsed.messages)) return parsed.messages;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (error) {
       console.error("Failed to load history:", error);
     }
     return [];
+  });
+  ipcMain.handle(IPC.HISTORY_LIST, async () => {
+    try {
+      if (!fs__default.existsSync(HISTORY_DIR)) return [];
+      const files = fs__default.readdirSync(HISTORY_DIR).filter((f) => f.startsWith("session-") && f.endsWith(".json"));
+      const sessions = [];
+      for (const file of files) {
+        try {
+          const filePath = path__default.join(HISTORY_DIR, file);
+          const raw = fs__default.readFileSync(filePath, "utf8");
+          const data = JSON.parse(raw);
+          sessions.push({
+            id: data.id || file,
+            date: data.date || "",
+            excerpt: data.excerpt || "Session",
+            filePath
+          });
+        } catch {
+        }
+      }
+      sessions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      return sessions;
+    } catch (error) {
+      console.error("Failed to list history:", error);
+      return [];
+    }
+  });
+  ipcMain.handle(IPC.WORKSPACE_OPEN_FOLDER, async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog(_mainWindow, {
+      title: "Open Workspace Folder",
+      properties: ["openDirectory", "createDirectory"]
+    });
+    if (canceled || filePaths.length === 0) return null;
+    return filePaths[0];
+  });
+  ipcMain.handle(IPC.WORKSPACE_READ_FILE, async (_, filePath) => {
+    try {
+      return fs__default.readFileSync(filePath, "utf8");
+    } catch (error) {
+      console.error("Failed to read file:", error);
+      return "";
+    }
+  });
+  ipcMain.handle(IPC.WORKSPACE_SAVE_FILE, async (_, { filePath, content }) => {
+    try {
+      const dir = path__default.dirname(filePath);
+      if (!fs__default.existsSync(dir)) {
+        fs__default.mkdirSync(dir, { recursive: true });
+      }
+      fs__default.writeFileSync(filePath, content, "utf8");
+    } catch (error) {
+      console.error("Failed to save file:", error);
+    }
+  });
+  ipcMain.handle(IPC.WORKSPACE_UPLOAD_RTM, async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog(_mainWindow, {
+      title: "Upload RTM Document",
+      filters: [
+        { name: "Documents", extensions: ["txt", "csv", "md", "json"] },
+        { name: "All Files", extensions: ["*"] }
+      ],
+      properties: ["openFile"]
+    });
+    if (canceled || filePaths.length === 0) return null;
+    try {
+      const content = fs__default.readFileSync(filePaths[0], "utf8");
+      const fileName = path__default.basename(filePaths[0]);
+      return { fileName, content };
+    } catch (error) {
+      console.error("Failed to read RTM file:", error);
+      return null;
+    }
   });
 }
 const __dirname$1 = path$1.dirname(fileURLToPath(import.meta.url));

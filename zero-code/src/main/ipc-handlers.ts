@@ -7,6 +7,7 @@ import { EvidenceManager } from './evidence-manager';
 import { generateReport } from './report-generator';
 import { hostRoom, stopRoom } from './websocket-server';
 import fs from 'fs';
+import path from 'path';
 
 export function registerIpcHandlers(_mainWindow: BrowserWindow, browserViewController: BrowserViewController, ollamaClient: OllamaClient) {
 
@@ -88,8 +89,9 @@ export function registerIpcHandlers(_mainWindow: BrowserWindow, browserViewContr
 
     ipcMain.handle(IPC.REPORT_GENERATE, async (_, session) => {
         try {
-            EvidenceManager.writeSessionLog(session.sessionId, session);
-            const pdfPath = await generateReport(session);
+            const activeFolder = session.activeFolder || null;
+            EvidenceManager.writeSessionLog(session.sessionId, session, activeFolder);
+            const pdfPath = await generateReport(session, activeFolder);
             return { pdfPath };
         } catch (error) {
             console.error('Failed to generate report:', error);
@@ -123,28 +125,131 @@ export function registerIpcHandlers(_mainWindow: BrowserWindow, browserViewContr
     });
 
     // History endpoints
+    const HISTORY_DIR = path.join('C:', 'zerocode', 'history');
+
     ipcMain.handle(IPC.HISTORY_SAVE, async (_, messages) => {
         try {
-            const historyDir = 'C:\\zerocode\\history';
-            if (!fs.existsSync(historyDir)) {
-                fs.mkdirSync(historyDir, { recursive: true });
+            if (!fs.existsSync(HISTORY_DIR)) {
+                fs.mkdirSync(HISTORY_DIR, { recursive: true });
             }
-            fs.writeFileSync(`${historyDir}\\chat-history.json`, JSON.stringify(messages, null, 2));
+            // Always overwrite current active session
+            fs.writeFileSync(path.join(HISTORY_DIR, 'chat-history.json'), JSON.stringify(messages, null, 2));
+
+            // Also save/update the active session envelope
+            if (messages && messages.length > 0) {
+                const firstUserMsg = messages.find((m: any) => m.role === 'user');
+                const excerpt = firstUserMsg ? firstUserMsg.content.substring(0, 50) : 'Session';
+                const sessionData = {
+                    id: Date.now().toString(),
+                    date: new Date().toISOString(),
+                    excerpt,
+                    messages
+                };
+                fs.writeFileSync(path.join(HISTORY_DIR, 'session-active.json'), JSON.stringify(sessionData, null, 2));
+            }
         } catch (error) {
             console.error('Failed to save history:', error);
         }
     });
 
-    ipcMain.handle(IPC.HISTORY_LOAD, async () => {
+    ipcMain.handle(IPC.HISTORY_LOAD, async (_, sessionFile?: string) => {
         try {
-            const historyFile = 'C:\\zerocode\\history\\chat-history.json';
-            if (fs.existsSync(historyFile)) {
-                const data = fs.readFileSync(historyFile, 'utf8');
-                return JSON.parse(data);
+            const filePath = sessionFile || path.join(HISTORY_DIR, 'chat-history.json');
+            if (fs.existsSync(filePath)) {
+                const data = fs.readFileSync(filePath, 'utf8');
+                const parsed = JSON.parse(data);
+                // If it's a session envelope { id, date, excerpt, messages }, return messages
+                if (parsed.messages && Array.isArray(parsed.messages)) return parsed.messages;
+                // If it's a raw messages array
+                if (Array.isArray(parsed)) return parsed;
             }
         } catch (error) {
             console.error('Failed to load history:', error);
         }
         return [];
+    });
+
+    ipcMain.handle(IPC.HISTORY_LIST, async () => {
+        try {
+            if (!fs.existsSync(HISTORY_DIR)) return [];
+
+            const files = fs.readdirSync(HISTORY_DIR)
+                .filter((f: string) => f.startsWith('session-') && f.endsWith('.json'));
+
+            const sessions: { id: string; date: string; excerpt: string; filePath: string }[] = [];
+
+            for (const file of files) {
+                try {
+                    const filePath = path.join(HISTORY_DIR, file);
+                    const raw = fs.readFileSync(filePath, 'utf8');
+                    const data = JSON.parse(raw);
+                    sessions.push({
+                        id: data.id || file,
+                        date: data.date || '',
+                        excerpt: data.excerpt || 'Session',
+                        filePath
+                    });
+                } catch {
+                    // skip corrupt files
+                }
+            }
+
+            sessions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            return sessions;
+        } catch (error) {
+            console.error('Failed to list history:', error);
+            return [];
+        }
+    });
+
+    // Workspace handlers
+    ipcMain.handle(IPC.WORKSPACE_OPEN_FOLDER, async () => {
+        const { canceled, filePaths } = await dialog.showOpenDialog(_mainWindow, {
+            title: 'Open Workspace Folder',
+            properties: ['openDirectory', 'createDirectory']
+        });
+        if (canceled || filePaths.length === 0) return null;
+        return filePaths[0];
+    });
+
+    ipcMain.handle(IPC.WORKSPACE_READ_FILE, async (_, filePath: string) => {
+        try {
+            return fs.readFileSync(filePath, 'utf8');
+        } catch (error) {
+            console.error('Failed to read file:', error);
+            return '';
+        }
+    });
+
+    ipcMain.handle(IPC.WORKSPACE_SAVE_FILE, async (_, { filePath, content }: { filePath: string; content: string }) => {
+        try {
+            const dir = path.dirname(filePath);
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+            }
+            fs.writeFileSync(filePath, content, 'utf8');
+        } catch (error) {
+            console.error('Failed to save file:', error);
+        }
+    });
+
+    ipcMain.handle(IPC.WORKSPACE_UPLOAD_RTM, async () => {
+        const { canceled, filePaths } = await dialog.showOpenDialog(_mainWindow, {
+            title: 'Upload RTM Document',
+            filters: [
+                { name: 'Documents', extensions: ['txt', 'csv', 'md', 'json'] },
+                { name: 'All Files', extensions: ['*'] }
+            ],
+            properties: ['openFile']
+        });
+        if (canceled || filePaths.length === 0) return null;
+        try {
+            const content = fs.readFileSync(filePaths[0], 'utf8');
+            const fileName = path.basename(filePaths[0]);
+            return { fileName, content };
+        } catch (error) {
+            console.error('Failed to read RTM file:', error);
+            return null;
+        }
     });
 }

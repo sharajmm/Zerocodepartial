@@ -13,6 +13,10 @@ export function useOllamaStream() {
     const { setRawAiResponse } = useTestStore();
 
     useEffect(() => {
+        // IMPORTANT: Clean up any previous listeners FIRST to prevent duplication
+        window.electronAPI.removeAllListeners('ollama:generate:token');
+        window.electronAPI.removeAllListeners('ollama:generate:error');
+
         // Listen for incoming tokens
         window.electronAPI.onOllamaToken((data: any) => {
             // Find the currently streaming message

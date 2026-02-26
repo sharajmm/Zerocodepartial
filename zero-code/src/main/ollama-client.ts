@@ -62,6 +62,7 @@ export class OllamaClient {
             const decoder = new TextDecoder();
             let done = false;
             let buffer = '';
+            let doneSent = false;
 
             while (!done) {
                 const { value, done: streamDone } = await reader.read();
@@ -80,7 +81,10 @@ export class OllamaClient {
                         try {
                             const data = JSON.parse(line);
                             if (data.done) {
-                                this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: '', done: true });
+                                if (!doneSent) {
+                                    this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: '', done: true });
+                                    doneSent = true;
+                                }
                             } else {
                                 this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: data.message?.content || '', done: false });
                             }
@@ -98,14 +102,20 @@ export class OllamaClient {
                 try {
                     const data = JSON.parse(buffer);
                     if (data.done) {
-                        this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: '', done: true });
+                        if (!doneSent) {
+                            this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: '', done: true });
+                            doneSent = true;
+                        }
                     } else {
                         this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: data.message?.content || '', done: false });
                     }
                 } catch (err) { }
             }
 
-            this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: '', done: true });
+            // Only send done if it hasn't been sent yet
+            if (!doneSent) {
+                this.mainWindow.webContents.send(IPC.OLLAMA_GENERATE_TOKEN, { token: '', done: true });
+            }
 
         } catch (e: any) {
             console.error('Ollama generate error:', e);

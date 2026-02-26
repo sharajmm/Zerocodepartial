@@ -31,7 +31,12 @@ const IPC = {
   ROOM_HOST: "room:host",
   ROOM_STOP: "room:stop",
   HISTORY_SAVE: "history:save",
-  HISTORY_LOAD: "history:load"
+  HISTORY_LOAD: "history:load",
+  HISTORY_LIST: "history:list",
+  WORKSPACE_OPEN_FOLDER: "workspace:open-folder",
+  WORKSPACE_READ_FILE: "workspace:read-file",
+  WORKSPACE_SAVE_FILE: "workspace:save-file",
+  WORKSPACE_UPLOAD_RTM: "workspace:upload-rtm"
 };
 electron.contextBridge.exposeInMainWorld("electronAPI", {
   // Browser
@@ -49,7 +54,8 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
   },
   // History
   historySave: (messages) => electron.ipcRenderer.invoke(IPC.HISTORY_SAVE, messages),
-  historyLoad: () => electron.ipcRenderer.invoke(IPC.HISTORY_LOAD),
+  historyLoad: (sessionFile) => electron.ipcRenderer.invoke(IPC.HISTORY_LOAD, sessionFile),
+  historyList: () => electron.ipcRenderer.invoke(IPC.HISTORY_LIST),
   // DOM
   domScrape: () => electron.ipcRenderer.invoke(IPC.DOM_SCRAPE),
   // Picker
@@ -85,6 +91,11 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
   // Local Collab
   roomHost: () => electron.ipcRenderer.invoke(IPC.ROOM_HOST),
   roomStop: () => electron.ipcRenderer.invoke(IPC.ROOM_STOP),
+  // Workspace
+  workspaceOpenFolder: () => electron.ipcRenderer.invoke(IPC.WORKSPACE_OPEN_FOLDER),
+  workspaceReadFile: (filePath) => electron.ipcRenderer.invoke(IPC.WORKSPACE_READ_FILE, filePath),
+  workspaceSaveFile: (filePath, content) => electron.ipcRenderer.invoke(IPC.WORKSPACE_SAVE_FILE, { filePath, content }),
+  workspaceUploadRtm: () => electron.ipcRenderer.invoke(IPC.WORKSPACE_UPLOAD_RTM),
   removeAllListeners: (channel) => {
     electron.ipcRenderer.removeAllListeners(channel);
   }
