@@ -32,6 +32,9 @@ function createWindow() {
         mainWindow?.show();
     });
 
+    mainWindow.setMenu(null);
+    mainWindow.webContents.setVisualZoomLevelLimits(1, 1);
+
     if (process.env.VITE_DEV_SERVER_URL) {
         mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
     } else {

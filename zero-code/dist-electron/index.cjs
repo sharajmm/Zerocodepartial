@@ -1,4 +1,4 @@
-import { session, BrowserView, shell, ipcMain, dialog, app, BrowserWindow } from "electron";
+import { session, WebContentsView, shell, ipcMain, dialog, app, BrowserWindow } from "electron";
 import path$1 from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "child_process";
@@ -167,7 +167,7 @@ class BrowserViewController {
   init() {
     const partition = "persist:zerocode-" + (process.env.VITE_CDP_PORT || Date.now());
     const viewSession = session.fromPartition(partition);
-    this.view = new BrowserView({
+    this.view = new WebContentsView({
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
@@ -177,7 +177,7 @@ class BrowserViewController {
   }
   mount(bounds) {
     if (!this.view) return;
-    this.mainWindow.addBrowserView(this.view);
+    this.mainWindow.contentView.addChildView(this.view);
     this.setBounds(bounds);
     this.goHome();
     this.setupListeners();
@@ -553,7 +553,7 @@ function expect(locator) {
         console.log('STEP_RESULT:', JSON.stringify({ stepIndex: 0, status: 'passed' }));
         // redefine console.log intercept logic dynamically?
         // Actually we just use the injected step logs.
-        ${innerCode}
+        \${innerCode}
         
         console.log('TEST_COMPLETE:', JSON.stringify({ success: true }));
     } catch(error) {
@@ -566,7 +566,7 @@ function expect(locator) {
     }
 })();
 `;
-  currentTempFile = path.join(process.cwd(), `zerocode-test-run-${Date.now()}.mjs`);
+  currentTempFile = path.join(process.cwd(), `zerocode-test-run-\${Date.now()}.mjs`);
   fs.writeFileSync(currentTempFile, standaloneCode);
   currentTestProcess = spawn("node", [currentTempFile]);
   let clientStepIndex = 1;
@@ -601,11 +601,11 @@ function expect(locator) {
     }
   });
   currentTestProcess.stderr?.on("data", (data) => {
-    console.error(`Playwright Error: ${data}`);
+    console.error(`Playwright Error: \${data}`);
   });
   currentTestProcess.on("close", (code2) => {
     if (code2 !== 0) {
-      console.log(`Test exited with code ${code2}`);
+      console.log(`Test exited with code \${code}`);
     }
     cleanup();
   });
@@ -160122,7 +160122,8 @@ function createWindow() {
     backgroundColor: "#000000",
     // Set dark background
     webPreferences: {
-      preload: path$1.join(__dirname$1, "preload.mjs"),
+      preload: path$1.join(__dirname$1, "preload.cjs"),
+      // Updated to .cjs
       nodeIntegration: false,
       contextIsolation: true
     }

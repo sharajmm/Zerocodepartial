@@ -11,10 +11,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     browserGoBack: () => ipcRenderer.invoke(IPC.BROWSER_GO_BACK),
     browserGoForward: () => ipcRenderer.invoke(IPC.BROWSER_GO_FORWARD),
     browserReload: () => ipcRenderer.invoke(IPC.BROWSER_RELOAD),
+    browserGoHome: () => ipcRenderer.invoke(IPC.BROWSER_GO_HOME),
 
     onBrowserNavigated: (cb: (data: any) => void) => {
         ipcRenderer.on(IPC.BROWSER_NAVIGATED, (_, data) => cb(data));
     },
+
+    // History
+    historySave: (messages: any[]) => ipcRenderer.invoke(IPC.HISTORY_SAVE, messages),
+    historyLoad: () => ipcRenderer.invoke(IPC.HISTORY_LOAD),
 
     // DOM
     domScrape: () => ipcRenderer.invoke(IPC.DOM_SCRAPE),

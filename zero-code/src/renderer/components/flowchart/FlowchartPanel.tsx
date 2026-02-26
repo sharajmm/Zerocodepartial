@@ -55,6 +55,7 @@ export default function FlowchartPanel() {
     const activeView = useTestStore(state => state.activeView);
     const hasFlowchart = useTestStore(state => state.hasFlowchart);
     const isStreaming = useChatStore(state => state.isStreaming);
+    const clearFlowchart = useTestStore(state => state.clearFlowchart);
     const { runTest, abortTest, isRunning } = useTestExecution();
 
     // Disable inputs if we are a guest in a room
@@ -85,6 +86,13 @@ export default function FlowchartPanel() {
                                 Run Test
                             </button>
                         ))}
+                        <button
+                            onClick={clearFlowchart}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white rounded-md border border-gray-700 text-sm font-medium transition-colors shadow-sm focus:outline-none"
+                            title="Clear Flowchart"
+                        >
+                            Clear
+                        </button>
                         <ViewToggle />
                     </div>
                 </div>
@@ -92,7 +100,7 @@ export default function FlowchartPanel() {
 
             {/* Conditional Progress bar */}
             {hasFlowchart && (
-                <div className="absolute top-0 w-full z-40 pr-32">
+                <div className="absolute top-0 w-full z-40 pr-[280px]">
                     {/* The right side padding keeps it out from under the toggle */}
                     <ProgressBar />
                 </div>

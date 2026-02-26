@@ -10,6 +10,7 @@ export const IPC = {
     BROWSER_GO_BACK: 'browser:go-back',
     BROWSER_GO_FORWARD: 'browser:go-forward',
     BROWSER_RELOAD: 'browser:reload',
+    BROWSER_GO_HOME: 'browser:go-home',
     BROWSER_MOUNT: 'browser:mount',
     BROWSER_RESIZE: 'browser:resize',
     BROWSER_NAVIGATED: 'browser:navigated', // emitted when URL changes
@@ -26,6 +27,8 @@ export const IPC = {
     PICKER_ELEMENT_SELECTED: 'picker:element-selected',
     ROOM_HOST: 'room:host',
     ROOM_STOP: 'room:stop',
+    HISTORY_SAVE: 'history:save',
+    HISTORY_LOAD: 'history:load',
 } as const;
 
 export const DEFAULT_MODEL = 'sharaj:7b';

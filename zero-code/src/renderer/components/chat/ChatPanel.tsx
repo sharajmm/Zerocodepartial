@@ -1,22 +1,18 @@
 import { useChatStore } from '../../store/chatStore';
-import { useTestStore } from '../../store/testStore';
 import { useSettingsStore } from '../../store/settingsStore';
 import { useCollabStore } from '../../store/collabStore';
 import ElementPicker from '../browser/ElementPicker';
 import ChatMessageBubble from './ChatMessage';
 import ReportActions from '../report/ReportActions';
 import { useOllamaStream } from '../../hooks/useOllamaStream';
-import { useTestExecution } from '../../hooks/useTestExecution';
 import { useRef, useState, useEffect } from 'react';
-import { Play, Square, PlusCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2 } from 'lucide-react';
 import { useBrowserStore } from '../../store/browserStore';
 
 export default function ChatPanel() {
     const messages = useChatStore(state => state.messages);
     const isStreaming = useChatStore(state => state.isStreaming);
     const clearChat = useChatStore(state => state.clearChat);
-    const hasFlowchart = useTestStore(state => state.hasFlowchart);
-    const code = useTestStore(state => state.code);
     const pinnedElements = useBrowserStore(state => state.pinnedElements);
     const removePinnedElement = useBrowserStore(state => state.removePinnedElement);
     const selectedModel = useSettingsStore(state => state.selectedModel);
@@ -25,9 +21,6 @@ export default function ChatPanel() {
     const roomId = useCollabStore(state => state.roomId);
     const role = useCollabStore(state => state.role);
     const isGuest = Boolean(roomId) && role !== 'Owner';
-
-    // Test execution hook
-    const { runTest, abortTest, isRunning } = useTestExecution();
 
     const { sendQuery } = useOllamaStream();
 
@@ -72,47 +65,29 @@ export default function ChatPanel() {
     };
 
     return (
-        <div className="h-full bg-panel border-l border-gray-800 p-4 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
+        <div className="h-full bg-panel border-l border-gray-800 p-2 flex flex-col">
+            <div className="flex items-center justify-between mb-2 px-1">
                 <div className="flex items-center gap-2">
-                    <h2 className="text-gray-400 font-mono text-sm">Chat (Right Panel)</h2>
+                    <h2 className="text-gray-400 font-mono text-xs">Chat History</h2>
                     {messages.length > 0 && !isGuest && (
                         <button
                             onClick={() => clearChat()}
                             className="p-1 text-gray-500 hover:text-red-400 rounded transition-colors"
                             title="Clear Chat Context"
                         >
-                            <Trash2 size={14} />
+                            <Trash2 size={12} />
                         </button>
                     )}
                 </div>
                 <div className="flex items-center gap-2">
                     {!isGuest && <ElementPicker />}
-                    {!isGuest && (isRunning ? (
-                        <button
-                            onClick={abortTest}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/20 text-red-500 hover:bg-red-500/30 rounded-md text-sm font-medium transition-colors shadow-sm"
-                        >
-                            <Square size={14} className="fill-current" />
-                            Abort
-                        </button>
-                    ) : (
-                        <button
-                            onClick={runTest}
-                            disabled={!hasFlowchart || !code || isStreaming}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors bg-green-600/20 text-green-500 hover:bg-green-600/40 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <Play size={14} fill="currentColor" />
-                            Run Test
-                        </button>
-                    ))}
                 </div>
             </div>
 
             <ReportActions />
 
             {/* Messages Window */}
-            <div className="flex-1 bg-gray-950 border border-gray-800 rounded-md flex flex-col p-4 overflow-y-auto mb-4 gap-4">
+            <div className="flex-1 bg-gray-950 border border-gray-800 rounded-md flex flex-col p-2 overflow-y-auto mb-2 gap-2">
                 {messages.length === 0 ? (
                     <div className="m-auto text-gray-500 text-sm text-center">
                         Describe what you want to test.

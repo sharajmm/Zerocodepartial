@@ -10,6 +10,7 @@ export interface ChatMessage {
 interface ChatState {
     messages: ChatMessage[];
     isStreaming: boolean;
+    setMessages: (messages: ChatMessage[]) => void;
     addMessage: (msg: Omit<ChatMessage, 'id'>) => void;
     appendToken: (messageId: string, token: string) => void;
     markStreamComplete: (messageId: string) => void;
@@ -21,6 +22,8 @@ export const useChatStore = create<ChatState>()(
     (set) => ({
         messages: [],
         isStreaming: false,
+
+        setMessages: (messages) => set({ messages }),
 
         addMessage: (msg) => set((state) => ({
             messages: [...state.messages, { ...msg, id: crypto.randomUUID() }],
@@ -50,3 +53,12 @@ export const useChatStore = create<ChatState>()(
         clearChat: () => set({ messages: [], isStreaming: false }),
     })
 );
+
+// Save chat history in background (for History modal access), but don't auto-load on startup
+if (typeof window !== 'undefined' && window.electronAPI) {
+    useChatStore.subscribe((state, prevState) => {
+        if (state.messages !== prevState.messages) {
+            window.electronAPI.historySave(state.messages);
+        }
+    });
+}

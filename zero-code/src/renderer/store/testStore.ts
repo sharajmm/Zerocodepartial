@@ -19,9 +19,11 @@ export interface TestState {
     setTestData: (nodes: FlowchartNode[], edges: FlowchartEdge[], code: string) => void;
     setStepStatus: (nodeId: string, status: 'pending' | 'running' | 'passed' | 'failed', screenshotPath?: string) => void;
     setActiveView: (view: 'flowchart' | 'code') => void;
+    setCode: (code: string) => void;
     setIsRunning: (isRunning: boolean) => void;
     resetStepStatuses: () => void;
     setLastReportPath: (path: string) => void;
+    clearFlowchart: () => void;
 }
 
 export const useTestStore = create<TestState>((set) => ({
@@ -50,11 +52,25 @@ export const useTestStore = create<TestState>((set) => ({
         return { stepStatuses: newStatuses, screenshotPaths: newPaths };
     }),
     setActiveView: (view) => set({ activeView: view }),
+    setCode: (code) => set({ code }),
     setIsRunning: (isRunning) => set({ isRunning: isRunning }),
     setLastReportPath: (path) => set({ lastReportPath: path }),
     resetStepStatuses: () => set((state) => {
         const resetStatuses: Record<string, 'pending'> = {};
         state.nodes.forEach(n => resetStatuses[n.id] = 'pending');
         return { stepStatuses: resetStatuses, screenshotPaths: {}, lastReportPath: undefined };
+    }),
+    clearFlowchart: () => set({
+        rawAiResponse: '',
+        hasFlowchart: false,
+        nodes: [],
+        edges: [],
+        code: '',
+        activeView: 'flowchart',
+        stepStatuses: {},
+        screenshotPaths: {},
+        isRunning: false,
+        sessionId: '',
+        lastReportPath: undefined
     })
 }));

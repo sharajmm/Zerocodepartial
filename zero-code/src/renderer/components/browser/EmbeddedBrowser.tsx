@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, ArrowRight, RotateCw, Search } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCw, Search, Home } from 'lucide-react';
 import { useBrowserStore } from '../../store/browserStore';
 import { useCollabStore } from '../../store/collabStore';
 import { broadcastRoomEvent, subscribeRoomEvents } from '../../lib/localRoom';
@@ -110,18 +110,25 @@ export default function EmbeddedBrowser() {
         await window.electronAPI.browserReload();
     };
 
+    const handleHome = async () => {
+        await window.electronAPI.browserGoHome();
+    };
+
     return (
         <div className="flex flex-col h-full w-full bg-panel">
             {/* URL Bar */}
             <div className={`h-12 bg-gray-900 border-b border-gray-800 flex items-center px-4 gap-3 shrink-0 ${isGuest ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div className="flex items-center gap-2">
-                    <button onClick={handleBack} className="p-1.5 hover:bg-gray-800 rounded-md text-gray-400 hover:text-white transition-colors">
+                    <button onClick={handleHome} className="p-1.5 hover:bg-gray-800 rounded-md text-gray-400 hover:text-white transition-colors" title="Home">
+                        <Home size={16} />
+                    </button>
+                    <button onClick={handleBack} className="p-1.5 hover:bg-gray-800 rounded-md text-gray-400 hover:text-white transition-colors" title="Go Back">
                         <ArrowLeft size={16} />
                     </button>
-                    <button onClick={handleForward} className="p-1.5 hover:bg-gray-800 rounded-md text-gray-400 hover:text-white transition-colors">
+                    <button onClick={handleForward} className="p-1.5 hover:bg-gray-800 rounded-md text-gray-400 hover:text-white transition-colors" title="Go Forward">
                         <ArrowRight size={16} />
                     </button>
-                    <button onClick={handleReload} className="p-1.5 hover:bg-gray-800 rounded-md text-gray-400 hover:text-white transition-colors">
+                    <button onClick={handleReload} className="p-1.5 hover:bg-gray-800 rounded-md text-gray-400 hover:text-white transition-colors" title="Reload">
                         <RotateCw size={16} />
                     </button>
                 </div>

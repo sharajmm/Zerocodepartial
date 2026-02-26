@@ -11,7 +11,12 @@ export interface ElectronAPI {
     browserGoBack: () => Promise<void>;
     browserGoForward: () => Promise<void>;
     browserReload: () => Promise<void>;
+    browserGoHome: () => Promise<void>;
     onBrowserNavigated: (cb: (data: { url: string }) => void) => void;
+
+    // History
+    historySave: (messages: any[]) => Promise<void>;
+    historyLoad: () => Promise<any[]>;
 
     // DOM
     domScrape: () => Promise<{ elements: DOMElement[] }>;

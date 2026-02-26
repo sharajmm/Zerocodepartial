@@ -64,3 +64,16 @@
 - [x] Add loading skeletons
 - [x] Handle AI parse errors natively
 - [x] Implement persistent localized Chat History serialization and reloading
+
+## Phase 9: Editable Code Workflow & Window Adjustments
+- [x] Integrate `react-simple-code-editor` to make Playwright code fully editable
+- [x] Implement `Sync Flowchart` hook to sync edited Playwright logic back into AST/Dagre UI
+- [x] Remove default Electron window top bars (File/View/Help) via `setMenu(null)`
+- [x] Restrict UI viewport zoom scaling to maintain perfect visual dimensions across desktop
+
+## Phase 10: App Flow & View Polishing
+- [x] Persist chat history logs as JSON array in `C:\zerocode\history` natively via IPC
+- [x] Integrate minimal dark-mode embedded homepage for new browsers with CSS styling
+- [x] Wire functional `Home`, `Back`, `Forward`, and `Reload` browser controls to electronAPI
+- [x] Minimize Chat Panel component footprint (reduce padding, shrink fonts, merge duplicate execute actions)
+- [x] Re-align `FlowchartPanel` Progress bar padding `pr-[280px]` so test buttons are fully clickable

@@ -2,6 +2,52 @@ import { BrowserView, BrowserWindow, session } from 'electron';
 import { IPC } from '../shared/constants';
 import { DOM_SCRAPE_SCRIPT } from '../renderer/lib/dom-scrape-script';
 
+const HOMEPAGE_HTML = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroCode New Tab</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a0f;
+            color: #ffffff;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+        }
+        .logo {
+            font-size: 3.5rem;
+            font-weight: 700;
+            letter-spacing: -0.05em;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            color: #9ca3af;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">ZeroCode</div>
+        <div class="subtitle">Enter a URL to begin automation testing</div>
+    </div>
+</body>
+</html>
+`;
+
 export class BrowserViewController {
     private view: BrowserView | null = null;
     private mainWindow: BrowserWindow;
@@ -30,7 +76,7 @@ export class BrowserViewController {
         this.setBounds(bounds);
 
         // Default load
-        this.view.webContents.loadURL('https://example.com');
+        this.goHome();
         this.setupListeners();
     }
 
@@ -237,5 +283,14 @@ export class BrowserViewController {
 
     public reload() {
         this.view?.webContents.reload();
+    }
+
+    public async goHome() {
+        if (!this.view) return;
+        try {
+            await this.view.webContents.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(HOMEPAGE_HTML)}`);
+        } catch (error) {
+            console.error('Home navigation failed:', error);
+        }
     }
 }

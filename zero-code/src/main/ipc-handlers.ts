@@ -42,6 +42,10 @@ export function registerIpcHandlers(_mainWindow: BrowserWindow, browserViewContr
         browserViewController.reload();
     });
 
+    ipcMain.handle(IPC.BROWSER_GO_HOME, () => {
+        browserViewController.goHome();
+    });
+
     ipcMain.handle(IPC.DOM_SCRAPE, async () => {
         return await browserViewController.scrapeDOM();
     });
@@ -116,5 +120,31 @@ export function registerIpcHandlers(_mainWindow: BrowserWindow, browserViewContr
 
     ipcMain.handle(IPC.ROOM_STOP, () => {
         stopRoom();
+    });
+
+    // History endpoints
+    ipcMain.handle(IPC.HISTORY_SAVE, async (_, messages) => {
+        try {
+            const historyDir = 'C:\\zerocode\\history';
+            if (!fs.existsSync(historyDir)) {
+                fs.mkdirSync(historyDir, { recursive: true });
+            }
+            fs.writeFileSync(`${historyDir}\\chat-history.json`, JSON.stringify(messages, null, 2));
+        } catch (error) {
+            console.error('Failed to save history:', error);
+        }
+    });
+
+    ipcMain.handle(IPC.HISTORY_LOAD, async () => {
+        try {
+            const historyFile = 'C:\\zerocode\\history\\chat-history.json';
+            if (fs.existsSync(historyFile)) {
+                const data = fs.readFileSync(historyFile, 'utf8');
+                return JSON.parse(data);
+            }
+        } catch (error) {
+            console.error('Failed to load history:', error);
+        }
+        return [];
     });
 }
