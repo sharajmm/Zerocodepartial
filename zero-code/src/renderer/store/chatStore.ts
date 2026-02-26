@@ -7,10 +7,14 @@ export interface ChatMessage {
     isStreaming?: boolean;
 }
 
+// Flag to temporarily skip history saving when restoring old sessions
+let _isRestoringHistory = false;
+
 interface ChatState {
     messages: ChatMessage[];
     isStreaming: boolean;
     setMessages: (messages: ChatMessage[]) => void;
+    restoreMessages: (messages: ChatMessage[]) => void;
     addMessage: (msg: Omit<ChatMessage, 'id'>) => void;
     appendToken: (messageId: string, token: string) => void;
     markStreamComplete: (messageId: string) => void;
@@ -24,6 +28,14 @@ export const useChatStore = create<ChatState>()(
         isStreaming: false,
 
         setMessages: (messages) => set({ messages }),
+
+        // Restore old history without triggering a new save
+        restoreMessages: (messages) => {
+            _isRestoringHistory = true;
+            set({ messages, isStreaming: false });
+            // Reset flag after a tick so the subscription skip fires
+            setTimeout(() => { _isRestoringHistory = false; }, 100);
+        },
 
         addMessage: (msg) => set((state) => ({
             messages: [...state.messages, { ...msg, id: crypto.randomUUID() }],
@@ -54,7 +66,6 @@ export const useChatStore = create<ChatState>()(
             // Archive the current session before clearing
             const currentMessages = useChatStore.getState().messages;
             if (currentMessages.length > 0 && typeof window !== 'undefined' && window.electronAPI) {
-                // Save current session as a timestamped archive
                 const firstUserMsg = currentMessages.find(m => m.role === 'user');
                 const excerpt = firstUserMsg ? firstUserMsg.content.substring(0, 50) : 'Session';
                 const sessionData = {
@@ -71,10 +82,10 @@ export const useChatStore = create<ChatState>()(
     })
 );
 
-// Save chat history in background (for History modal access), but don't auto-load on startup
+// Save chat history in background, but skip when restoring old sessions
 if (typeof window !== 'undefined' && window.electronAPI) {
     useChatStore.subscribe((state, prevState) => {
-        if (state.messages !== prevState.messages) {
+        if (state.messages !== prevState.messages && !_isRestoringHistory) {
             window.electronAPI.historySave(state.messages);
         }
     });

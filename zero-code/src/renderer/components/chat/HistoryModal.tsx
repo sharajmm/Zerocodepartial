@@ -10,7 +10,7 @@ interface HistorySession {
 }
 
 export default function HistoryModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
-    const setMessages = useChatStore(state => state.setMessages);
+    const restoreMessages = useChatStore(state => state.restoreMessages);
     const [sessions, setSessions] = useState<HistorySession[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -32,7 +32,7 @@ export default function HistoryModal({ isOpen, onClose }: { isOpen: boolean, onC
         try {
             const messages = await window.electronAPI.historyLoad(session.filePath);
             if (messages && messages.length > 0) {
-                setMessages(messages);
+                restoreMessages(messages);
             }
             onClose();
         } catch (error) {
