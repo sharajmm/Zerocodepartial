@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, ArrowRight, RotateCw, Search, Home } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCw, Globe, Home } from 'lucide-react';
 import { useBrowserStore } from '../../store/browserStore';
 import { useCollabStore } from '../../store/collabStore';
 import { broadcastRoomEvent, subscribeRoomEvents } from '../../lib/localRoom';
@@ -14,7 +14,6 @@ export default function EmbeddedBrowser() {
     const [guestStreamFrame, setGuestStreamFrame] = useState<string | null>(null);
 
     useEffect(() => {
-        // Sync external navigation changes to the input field
         setInputUrl(currentUrl);
     }, [currentUrl]);
 
@@ -31,12 +30,10 @@ export default function EmbeddedBrowser() {
         };
 
         if (isGuest) {
-            // Hide the actual electron embedded window for guests so it doesn't overlap React DOM
             window.electronAPI.browserResize({ x: 0, y: 0, width: 0, height: 0 });
             return;
         }
 
-        // Slight delay to ensure layout is done
         const timeoutId = setTimeout(mountBrowser, 100);
 
         const observer = new ResizeObserver((entries) => {
@@ -81,7 +78,7 @@ export default function EmbeddedBrowser() {
                 if (base64) {
                     broadcastRoomEvent({ type: 'SYNC_BROWSER', payload: base64 });
                 }
-            }, 1500); // 1.5s interval to save network overhead on massive 4K strings!
+            }, 1500);
             return () => clearInterval(interval);
         }
     }, [role, roomId]);
@@ -115,32 +112,32 @@ export default function EmbeddedBrowser() {
     };
 
     return (
-        <div className="flex flex-col h-full w-full bg-panel">
+        <div className="flex flex-col h-full w-full bg-background">
             {/* URL Bar */}
-            <div className={`h-12 bg-gray-900 border-b border-gray-800 flex items-center px-4 gap-3 shrink-0 ${isGuest ? 'opacity-50 pointer-events-none' : ''}`}>
-                <div className="flex items-center gap-2">
-                    <button onClick={handleHome} className="p-1.5 hover:bg-gray-800 rounded-md text-gray-400 hover:text-white transition-colors" title="Home">
-                        <Home size={16} />
+            <div className={`h-10 bg-surface border-b border-border flex items-center px-2 gap-1.5 shrink-0 ${isGuest ? 'opacity-40 pointer-events-none' : ''}`}>
+                <div className="flex items-center gap-0.5">
+                    <button onClick={handleHome} className="p-1.5 text-text-muted hover:text-text-primary hover:bg-white/[0.04] rounded-md transition-colors" title="Home">
+                        <Home size={14} />
                     </button>
-                    <button onClick={handleBack} className="p-1.5 hover:bg-gray-800 rounded-md text-gray-400 hover:text-white transition-colors" title="Go Back">
-                        <ArrowLeft size={16} />
+                    <button onClick={handleBack} className="p-1.5 text-text-muted hover:text-text-primary hover:bg-white/[0.04] rounded-md transition-colors" title="Back">
+                        <ArrowLeft size={14} />
                     </button>
-                    <button onClick={handleForward} className="p-1.5 hover:bg-gray-800 rounded-md text-gray-400 hover:text-white transition-colors" title="Go Forward">
-                        <ArrowRight size={16} />
+                    <button onClick={handleForward} className="p-1.5 text-text-muted hover:text-text-primary hover:bg-white/[0.04] rounded-md transition-colors" title="Forward">
+                        <ArrowRight size={14} />
                     </button>
-                    <button onClick={handleReload} className="p-1.5 hover:bg-gray-800 rounded-md text-gray-400 hover:text-white transition-colors" title="Reload">
-                        <RotateCw size={16} />
+                    <button onClick={handleReload} className="p-1.5 text-text-muted hover:text-text-primary hover:bg-white/[0.04] rounded-md transition-colors" title="Reload">
+                        <RotateCw size={13} />
                     </button>
                 </div>
 
-                <form onSubmit={handleNavigate} className="flex-1 flex items-center bg-gray-950 border border-gray-800 rounded-md overflow-hidden relative group focus-within:border-accent">
-                    <div className="pl-3 pr-2 text-gray-400">
-                        <Search size={14} />
+                <form onSubmit={handleNavigate} className="flex-1 flex items-center bg-background border border-border rounded-lg overflow-hidden focus-within:border-accent/30 focus-within:ring-1 focus-within:ring-accent/10 transition-all">
+                    <div className="pl-2.5 pr-1.5 text-text-muted">
+                        <Globe size={12} />
                     </div>
                     <input
                         type="text"
-                        className="flex-1 bg-transparent py-1.5 focus:outline-none text-sm text-gray-200"
-                        placeholder="Enter URL to test..."
+                        className="flex-1 bg-transparent py-1.5 focus:outline-none text-xs text-text-primary placeholder:text-text-muted font-mono"
+                        placeholder="Enter URL..."
                         value={inputUrl}
                         onChange={(e) => setInputUrl(e.target.value)}
                     />
@@ -153,14 +150,13 @@ export default function EmbeddedBrowser() {
                 ref={containerRef}
             >
                 {isGuest && (
-                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-gray-950">
+                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-background">
                         {guestStreamFrame ? (
                             <img src={guestStreamFrame} alt="Host Browser Stream" className="w-full h-full object-contain" />
                         ) : (
-                            <div className="bg-gray-900 border border-gray-800 p-4 rounded text-center shadow-2xl max-w-sm">
-                                <Search size={32} className="mx-auto mb-2 text-accent opacity-50" />
-                                <h3 className="font-semibold text-white mb-1">Waiting for Host...</h3>
-                                <p className="text-sm text-gray-400">Connected to session. The browser stream will appear shortly.</p>
+                            <div className="flex flex-col items-center gap-2 text-center">
+                                <h3 className="font-medium text-text-primary text-sm">Waiting for Host</h3>
+                                <p className="text-xs text-text-muted">Stream will appear shortly</p>
                             </div>
                         )}
                     </div>

@@ -34,9 +34,7 @@ function FlowchartCanvasInner() {
 
     useEffect(() => {
         if (rawNodes.length > 0) {
-            // Apply dagre layouting
             const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(rawNodes, rawEdges);
-
             // @ts-ignore
             setNodes(layoutedNodes);
             // @ts-ignore
@@ -55,14 +53,14 @@ function FlowchartCanvasInner() {
             nodesBounds.height,
             0.5,
             2,
-            0 // padding
+            0
         );
 
         const viewportElement = document.querySelector('.react-flow__viewport') as HTMLElement;
         if (!viewportElement) return;
 
         toPng(viewportElement, {
-            backgroundColor: '#0a0a0a',
+            backgroundColor: '#08080c',
             width: nodesBounds.width,
             height: nodesBounds.height,
             style: {
@@ -81,11 +79,10 @@ function FlowchartCanvasInner() {
     }, [getNodes]);
 
     return (
-        <div className="w-full h-full bg-[#0a0a0a] relative">
+        <div className="w-full h-full bg-background relative">
             {nodes.length === 0 ? (
-                <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 font-medium">
-                    <p className="mb-2">No flowchart generated yet.</p>
-                    <p className="text-sm">Describe a test in the chat panel to begin.</p>
+                <div className="w-full h-full flex flex-col items-center justify-center text-text-muted">
+                    <p className="text-xs">No flowchart generated yet</p>
                 </div>
             ) : (
                 <ReactFlow
@@ -100,15 +97,15 @@ function FlowchartCanvasInner() {
                     colorMode="dark"
                     proOptions={{ hideAttribution: true }}
                 >
-                    <Background color="#333" gap={16} />
+                    <Background color="#1a1a28" gap={20} size={1} />
                     <Controls showInteractive={false} />
                     <button
                         onClick={onDownload}
-                        className="absolute bottom-4 right-4 z-10 flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md border border-gray-700 shadow-sm transition-colors text-sm font-medium"
+                        className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-surface text-text-secondary hover:text-text-primary rounded-lg border border-border hover:border-border-hover transition-all text-[11px] font-medium"
                         title="Download as PNG"
                     >
-                        <Download size={14} />
-                        Export PNG
+                        <Download size={12} />
+                        PNG
                     </button>
                 </ReactFlow>
             )}

@@ -7,64 +7,65 @@ export default function ActionNode({ id, data, isConnectable }: NodeProps<Flowch
     const status = useTestStore(state => state.stepStatuses[id]) || data.status || 'pending';
     const screenshot = useTestStore(state => state.screenshotPaths[id]) || data.screenshotPath;
 
-    let borderColor = 'border-gray-600';
-    let bgColor = 'bg-gray-900';
+    let borderColor = 'border-border';
+    let bgColor = 'bg-surface';
     let animationClass = '';
     let Icon = MousePointer2;
-    let iconClass = 'text-gray-400';
+    let iconClass = 'text-text-muted';
+    let glowClass = '';
 
     if (status === 'running') {
-        borderColor = 'border-blue-500';
-        animationClass = 'animate-pulse shadow-[0_0_15px_rgba(59,130,246,0.3)] bg-blue-950/20';
+        borderColor = 'border-accent/40';
+        bgColor = 'bg-accent/5';
+        animationClass = 'animate-pulse';
+        glowClass = 'glow-accent';
         Icon = Loader2;
-        iconClass = 'text-blue-400 animate-spin';
+        iconClass = 'text-accent animate-spin';
     } else if (status === 'passed') {
-        borderColor = 'border-green-500/80';
-        bgColor = 'bg-green-950/10 shadow-[0_0_8px_rgba(34,197,94,0.15)]';
+        borderColor = 'border-emerald-500/30';
+        bgColor = 'bg-emerald-500/5';
+        glowClass = 'glow-green';
         Icon = CheckCircle2;
-        iconClass = 'text-green-500';
+        iconClass = 'text-emerald-500';
     } else if (status === 'failed') {
-        borderColor = 'border-red-500';
-        bgColor = 'bg-red-950/30';
+        borderColor = 'border-red-500/30';
+        bgColor = 'bg-red-500/5';
+        glowClass = 'glow-red';
         Icon = XCircle;
         iconClass = 'text-red-500';
     }
 
     return (
-        <div className={`px-4 py-3 shadow-md rounded-lg border-2 ${bgColor} ${borderColor} ${animationClass} min-w-[220px] transition-all duration-300`}>
+        <div className={`px-4 py-3 rounded-xl border ${bgColor} ${borderColor} ${animationClass} ${glowClass} min-w-[200px] transition-all duration-300`}>
             <Handle
                 type="target"
                 position={Position.Top}
                 isConnectable={isConnectable}
-                className="w-3 h-3 bg-gray-600 !border-gray-800"
+                className="w-2 h-2 bg-border !border-surface rounded-full"
             />
 
-            <div className="flex flex-col gap-1.5">
-                <div className="flex items-start gap-2">
-                    <div className="mt-0.5 min-w-5">
-                        <Icon size={16} className={iconClass} />
-                    </div>
-                    <div className="flex flex-col">
-                        <div className="font-semibold text-gray-200 text-sm whitespace-pre-wrap">{data.label}</div>
-                        {data.selector && (
-                            <div className="text-[11px] text-gray-400 font-mono mt-1 break-all bg-gray-950/50 px-1.5 py-0.5 rounded inline-block w-fit">
-                                {data.selector}
-                            </div>
-                        )}
-                    </div>
+            <div className="flex items-start gap-2.5">
+                <Icon size={14} className={`${iconClass} mt-0.5 shrink-0`} />
+                <div className="flex flex-col gap-1 min-w-0">
+                    <div className="font-medium text-text-primary text-[12px] leading-snug">{data.label}</div>
+                    {data.selector && (
+                        <div className="text-[10px] text-text-muted font-mono break-all bg-background px-1.5 py-0.5 rounded w-fit max-w-[180px] truncate">
+                            {data.selector}
+                        </div>
+                    )}
                 </div>
-                {screenshot && status === 'failed' && (
-                    <div onClick={() => window.electronAPI.evidenceOpenFolder(screenshot.substring(0, screenshot.lastIndexOf('\\')))} className="mt-2 flex transform hover:scale-105 transition-transform cursor-pointer overflow-hidden border border-red-500/30 rounded">
-                        <img src={`file://${screenshot}`} className="w-full h-auto max-h-[120px] object-cover" alt="Error Screenshot" />
-                    </div>
-                )}
             </div>
+            {screenshot && status === 'failed' && (
+                <div onClick={() => window.electronAPI.evidenceOpenFolder(screenshot.substring(0, screenshot.lastIndexOf('\\')))} className="mt-2 cursor-pointer overflow-hidden border border-red-500/20 rounded-lg hover:border-red-500/40 transition-colors">
+                    <img src={`file://${screenshot}`} className="w-full h-auto max-h-[100px] object-cover" alt="Error" />
+                </div>
+            )}
 
             <Handle
                 type="source"
                 position={Position.Bottom}
                 isConnectable={isConnectable}
-                className="w-3 h-3 bg-gray-600 !border-gray-800"
+                className="w-2 h-2 bg-border !border-surface rounded-full"
             />
         </div>
     );

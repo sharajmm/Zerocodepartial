@@ -6,7 +6,6 @@ export default function ElementPicker() {
     const { isPickerActive, setPickerActive, addPinnedElement } = useBrowserStore();
 
     useEffect(() => {
-        // Listen for element selection
         window.electronAPI.onPickerElement((data) => {
             addPinnedElement(data as any);
             setPickerActive(false);
@@ -30,13 +29,13 @@ export default function ElementPicker() {
     return (
         <button
             onClick={togglePicker}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${isPickerActive
-                    ? 'bg-accent text-white shadow-[0_0_10px_rgba(59,130,246,0.5)]'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${isPickerActive
+                    ? 'bg-accent/15 text-accent border border-accent/20 shadow-[0_0_12px_rgba(99,102,241,0.15)]'
+                    : 'text-text-muted hover:text-text-secondary hover:bg-white/[0.04] border border-transparent'
                 }`}
         >
-            <MousePointer2 size={16} className={isPickerActive ? 'animate-pulse' : ''} />
-            {isPickerActive ? 'Picking...' : 'Pick Element'}
+            <MousePointer2 size={13} className={isPickerActive ? 'animate-pulse' : ''} />
+            {isPickerActive ? 'Picking' : 'Pick'}
         </button>
     );
 }

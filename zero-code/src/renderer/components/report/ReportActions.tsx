@@ -14,7 +14,6 @@ export default function ReportActions() {
 
     const [isGenerating, setIsGenerating] = useState(false);
 
-    // Don't show if test is still running or never ran (no statuses)
     const hasStatuses = Object.keys(stepStatuses).length > 0;
     if (isRunning || !hasStatuses) return null;
 
@@ -69,11 +68,6 @@ export default function ReportActions() {
 
     const handleOpenPdf = () => {
         if (lastReportPath) {
-            // Using electronAPI or evidenceOpenFolder
-            // Wait, there's no openPath explicitly exposed, but evidenceOpenFolder opens files?
-            // "opens the PDF directly using shell.openPath()" is a main process API.
-            // Let's rely on evidenceOpenFolder to just open the evidence directory, or create an openFile IPC.
-            // Wait, shell.openPath works on files too. Let's just use evidenceOpenFolder which calls shell.openPath.
             window.electronAPI.evidenceOpenFolder(lastReportPath);
         }
     };
@@ -86,13 +80,7 @@ export default function ReportActions() {
 
     const handleOpenEvidence = () => {
         if (sessionId) {
-            // We can guess the directory or just pass the last report path and let the OS open its parent
             if (lastReportPath) {
-                // Since evidenceOpenFolder uses shell.openPath, it will open the file if it's a file, or the dir if it's a dir.
-                // We want the evidence folder.
-                // It's saved in userData/zero-code-evidence/sessionId
-                // Wait! evidenceOpenFolder(folderPath) opens what we give it.
-                // For evidence folder, we could give the screenshot path parent.
                 const failedScreenshot = Object.values(screenshotPaths)[0];
                 if (failedScreenshot) {
                     window.electronAPI.evidenceOpenFolder(failedScreenshot);
@@ -104,40 +92,40 @@ export default function ReportActions() {
     };
 
     return (
-        <div className="flex flex-col gap-2 p-3 bg-gray-900 border border-gray-800 rounded-lg mt-2 shadow-sm text-sm">
+        <div className="mx-2 mt-1 mb-1 p-2.5 bg-background border border-border rounded-xl text-xs shrink-0">
             {!lastReportPath && !isGenerating ? (
                 <button
                     onClick={handleGenerate}
-                    className="flex w-full justify-center items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                    className="flex w-full justify-center items-center gap-1.5 px-3 py-2 bg-accent/10 hover:bg-accent/15 text-accent rounded-lg border border-accent/10 transition-all text-[11px] font-medium"
                 >
-                    <FileText size={16} />
+                    <FileText size={13} />
                     Generate Report
                 </button>
             ) : isGenerating ? (
-                <button disabled className="flex w-full justify-center items-center gap-2 px-3 py-2 bg-gray-800 text-gray-400 rounded cursor-not-allowed">
-                    <Loader2 size={16} className="animate-spin" />
-                    Generating Report...
+                <button disabled className="flex w-full justify-center items-center gap-1.5 px-3 py-2 bg-background text-text-muted rounded-lg border border-border cursor-not-allowed text-[11px]">
+                    <Loader2 size={13} className="animate-spin" />
+                    Generating...
                 </button>
             ) : (
                 <>
-                    <div className="flex items-center gap-2 text-green-400 mb-1 font-medium pb-2 border-b border-gray-800">
-                        <FileCheck size={16} />
+                    <div className="flex items-center gap-1.5 text-emerald-400 mb-2 text-[11px] font-medium">
+                        <FileCheck size={13} />
                         Report Ready
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1.5">
                         <button
                             onClick={handleOpenPdf}
-                            className="flex-1 flex justify-center items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded transition-colors"
+                            className="flex-1 flex justify-center items-center gap-1 px-2 py-1.5 bg-surface hover:bg-white/[0.04] text-text-secondary rounded-lg border border-border transition-all text-[10px] font-medium"
                         >
-                            <FileText size={14} />
-                            Open PDF
+                            <FileText size={11} />
+                            Open
                         </button>
                         <button
                             onClick={handleExportPdf}
-                            className="flex-1 flex justify-center items-center gap-2 px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded transition-colors"
+                            className="flex-1 flex justify-center items-center gap-1 px-2 py-1.5 bg-accent/10 hover:bg-accent/15 text-accent rounded-lg border border-accent/10 transition-all text-[10px] font-medium"
                         >
-                            <Download size={14} />
-                            Export PDF
+                            <Download size={11} />
+                            Export
                         </button>
                     </div>
                 </>
@@ -146,10 +134,10 @@ export default function ReportActions() {
             {hasFailures && (
                 <button
                     onClick={handleOpenEvidence}
-                    className="flex w-full justify-center items-center gap-2 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 rounded transition-colors mt-2"
+                    className="flex w-full justify-center items-center gap-1.5 px-3 py-1.5 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 text-red-400 rounded-lg transition-all mt-1.5 text-[10px] font-medium"
                 >
-                    <FolderOpen size={14} />
-                    Open Evidence Folder
+                    <FolderOpen size={11} />
+                    Evidence
                 </button>
             )}
         </div>

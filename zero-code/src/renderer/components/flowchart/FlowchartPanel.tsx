@@ -9,45 +9,11 @@ import ViewToggle from './ViewToggle';
 import { Play, Square } from 'lucide-react';
 
 const FlowchartSkeleton = () => (
-    <div className="h-full w-full flex flex-col p-8 gap-6 animate-pulse opacity-60">
-        <div className="h-10 bg-gray-800 rounded-lg w-1/3 mb-4 border border-gray-700"></div>
-
-        <div className="flex gap-4 items-center">
-            <div className="w-48 h-16 bg-gray-800 rounded-xl border border-gray-700 flex items-center p-3 gap-3">
-                <div className="w-8 h-8 rounded-full bg-gray-700"></div>
-                <div className="flex flex-col gap-2 flex-1">
-                    <div className="h-2 bg-gray-700 rounded w-full"></div>
-                    <div className="h-2 bg-gray-700 rounded w-2/3"></div>
-                </div>
-            </div>
-            <div className="w-12 h-1 bg-gray-700 rounded-full"></div>
-            <div className="w-48 h-16 bg-gray-800 rounded-xl border border-gray-700 flex items-center p-3 gap-3">
-                <div className="w-8 h-8 rounded-full bg-gray-700"></div>
-                <div className="flex flex-col gap-2 flex-1">
-                    <div className="h-2 bg-gray-700 rounded w-full"></div>
-                    <div className="h-2 bg-gray-700 rounded w-2/3"></div>
-                </div>
-            </div>
+    <div className="h-full w-full flex flex-col items-center justify-center gap-4">
+        <div className="relative">
+            <div className="w-10 h-10 rounded-xl border-2 border-accent/30 border-t-accent animate-spin" />
         </div>
-
-        <div className="flex gap-4 items-center pl-24 opacity-70">
-            <div className="w-1 h-12 bg-gray-700 rounded-full ml-24"></div>
-        </div>
-
-        <div className="flex gap-4 items-center pl-32 opacity-50">
-            <div className="w-48 h-16 bg-gray-800 rounded-xl border border-gray-700 flex items-center p-3 gap-3">
-                <div className="w-8 h-8 rounded-full bg-gray-700"></div>
-                <div className="flex flex-col gap-2 flex-1">
-                    <div className="h-2 bg-gray-700 rounded w-full"></div>
-                    <div className="h-2 bg-gray-700 rounded w-2/3"></div>
-                </div>
-            </div>
-        </div>
-
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
-            <div className="w-8 h-8 rounded-full border-t-2 border-accent animate-spin"></div>
-            <span className="text-gray-400 font-mono text-sm tracking-widest">BUILDING AST...</span>
-        </div>
+        <span className="text-text-muted text-[11px] font-mono tracking-widest uppercase">Generating flowchart...</span>
     </div>
 );
 
@@ -64,44 +30,41 @@ export default function FlowchartPanel() {
     const isGuest = Boolean(roomId) && role !== 'Owner';
 
     return (
-        <div className="flex flex-col h-full bg-[#0a0a0a] relative">
-            {/* Top Toolbar overlay */}
+        <div className="flex flex-col h-full bg-background relative">
+            {/* Toolbar */}
             {hasFlowchart && (
-                <div className="absolute top-2 right-4 z-50 flex flex-col gap-2 items-end">
-                    <div className="flex items-center gap-2">
-                        {!isGuest && (isRunning ? (
-                            <button
-                                onClick={abortTest}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300 rounded-md border border-red-500/30 text-sm font-medium transition-colors shadow-sm"
-                            >
-                                <Square size={14} className="fill-current" />
-                                Stop
-                            </button>
-                        ) : (
-                            <button
-                                onClick={runTest}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/20 text-green-400 hover:bg-green-500/30 hover:text-green-300 rounded-md border border-green-500/30 text-sm font-medium transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500/40"
-                            >
-                                <Play size={14} className="fill-current" />
-                                Run Test
-                            </button>
-                        ))}
+                <div className="absolute top-2.5 right-3 z-50 flex items-center gap-1.5">
+                    {!isGuest && (isRunning ? (
                         <button
-                            onClick={clearFlowchart}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white rounded-md border border-gray-700 text-sm font-medium transition-colors shadow-sm focus:outline-none"
-                            title="Clear Flowchart"
+                            onClick={abortTest}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/15 rounded-lg border border-red-500/15 text-[11px] font-medium transition-all"
                         >
-                            Clear
+                            <Square size={12} className="fill-current" />
+                            Stop
                         </button>
-                        <ViewToggle />
-                    </div>
+                    ) : (
+                        <button
+                            onClick={runTest}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/15 rounded-lg border border-emerald-500/15 text-[11px] font-medium transition-all glow-green"
+                        >
+                            <Play size={12} className="fill-current" />
+                            Run
+                        </button>
+                    ))}
+                    <button
+                        onClick={clearFlowchart}
+                        className="px-2.5 py-1.5 text-text-muted hover:text-text-primary hover:bg-white/[0.04] rounded-lg border border-border text-[11px] font-medium transition-all"
+                        title="Clear Flowchart"
+                    >
+                        Clear
+                    </button>
+                    <ViewToggle />
                 </div>
             )}
 
-            {/* Conditional Progress bar */}
+            {/* Progress bar */}
             {hasFlowchart && (
-                <div className="absolute top-0 w-full z-40 pr-[280px]">
-                    {/* The right side padding keeps it out from under the toggle */}
+                <div className="absolute top-0 w-full z-40 pr-[260px]">
                     <ProgressBar />
                 </div>
             )}
@@ -111,10 +74,10 @@ export default function FlowchartPanel() {
                     isStreaming ? (
                         <FlowchartSkeleton />
                     ) : (
-                        <div className="h-full flex items-center justify-center text-gray-500 font-medium">
-                            <div className="text-center">
-                                <h3 className="text-lg text-gray-300 mb-2 font-mono">ZeroCode Automation</h3>
-                                <p className="text-sm">Describe a test scenario in the chat to begin.</p>
+                        <div className="h-full flex items-center justify-center">
+                            <div className="flex flex-col items-center gap-1 text-center">
+                                <h3 className="text-sm font-medium text-text-primary tracking-tight">ZeroCode</h3>
+                                <p className="text-[11px] text-text-muted">Describe a test scenario to begin</p>
                             </div>
                         </div>
                     )

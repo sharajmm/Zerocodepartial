@@ -36,20 +36,25 @@ const StatusBar = () => {
     }, [setOllamaStatus]);
 
     return (
-        <div className="h-8 bg-panel border-t border-gray-800 flex items-center justify-between px-4 text-xs text-gray-500 font-mono">
-            <div className="flex items-center gap-2 h-full py-1 min-w-[250px]">
-                <div className={`w-2 h-2 rounded-full ${ollamaStatus === 'ok' ? 'bg-green-500' : ollamaStatus === 'checking' ? 'bg-yellow-500' : 'bg-red-500'}`} title={`Ollama: ${ollamaStatus}`}></div>
+        <div className="h-7 bg-surface/60 backdrop-blur-sm border-t border-border flex items-center justify-between px-4 text-[10px] text-text-muted font-mono select-none">
+            <div className="flex items-center gap-2 h-full">
+                <div className="flex items-center gap-1.5">
+                    <div className={`w-1.5 h-1.5 rounded-full ${ollamaStatus === 'ok' ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]' : ollamaStatus === 'checking' ? 'bg-amber-500 animate-pulse' : 'bg-red-500'}`} title={`Ollama: ${ollamaStatus}`} />
+                    <span className="text-text-muted">{ollamaStatus === 'ok' ? 'Ready' : ollamaStatus === 'checking' ? 'Checking...' : 'Offline'}</span>
+                </div>
+                <div className="w-px h-3 bg-border" />
                 <ModelSwitcher />
             </div>
 
-            <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5" title="Local AI Processing">
-                    <Cpu size={14} />
-                    <span>Local AI Active</span>
+            <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1" title="Local AI Processing">
+                    <Cpu size={11} className="text-text-muted" />
+                    <span>Local</span>
                 </div>
-                <div className="flex items-center gap-1.5 border-l border-gray-700 pl-4" title="Liveblocks Traffic">
-                    <Wifi size={14} className={roomId ? "text-green-500" : "text-gray-600"} />
-                    <span>↑ {bytes.up} B/s  ↓ {bytes.down} B/s</span>
+                <div className="w-px h-3 bg-border" />
+                <div className="flex items-center gap-1" title="Network Traffic">
+                    <Wifi size={11} className={roomId ? "text-emerald-500" : "text-text-muted/50"} />
+                    <span className="tabular-nums">↑{bytes.up} ↓{bytes.down}</span>
                 </div>
             </div>
         </div>

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useSettingsStore } from '../../store/settingsStore';
-import { Settings2, RefreshCw } from 'lucide-react';
+import { ChevronDown, RefreshCw } from 'lucide-react';
 
 export default function ModelSwitcher() {
     const { selectedModel, setSelectedModel, installedModels, setInstalledModels } = useSettingsStore();
@@ -16,29 +16,31 @@ export default function ModelSwitcher() {
     }, []);
 
     return (
-        <div className="flex items-center gap-2 bg-gray-900 border border-gray-800 rounded px-2 py-1 shadow-inner h-full shrink-0">
-            <Settings2 size={14} className="text-gray-400" />
-            <select
-                value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
-                className="bg-transparent text-gray-300 text-xs focus:outline-none appearance-none cursor-pointer pr-4 font-mono max-w-[150px] truncate"
-            >
-                {installedModels.length === 0 ? (
-                    <option value={selectedModel}>{selectedModel}</option>
-                ) : (
-                    installedModels.map((model) => (
-                        <option key={model} value={model} className="bg-panel p-2">
-                            {model}
-                        </option>
-                    ))
-                )}
-            </select>
+        <div className="flex items-center gap-1.5 h-full">
+            <div className="relative">
+                <select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    className="bg-transparent text-text-secondary text-[10px] focus:outline-none appearance-none cursor-pointer pr-4 font-mono max-w-[120px] truncate hover:text-text-primary transition-colors"
+                >
+                    {installedModels.length === 0 ? (
+                        <option value={selectedModel}>{selectedModel}</option>
+                    ) : (
+                        installedModels.map((model) => (
+                            <option key={model} value={model} className="bg-surface text-text-primary">
+                                {model}
+                            </option>
+                        ))
+                    )}
+                </select>
+                <ChevronDown size={9} className="absolute right-0 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+            </div>
             <button
                 onClick={fetchModels}
-                className="p-1 hover:bg-gray-800 hover:text-white rounded text-gray-500 transition-colors"
-                title="Refresh Ollama Models"
+                className="p-0.5 text-text-muted hover:text-text-secondary rounded transition-colors"
+                title="Refresh"
             >
-                <RefreshCw size={12} />
+                <RefreshCw size={9} />
             </button>
         </div>
     );
