@@ -20,9 +20,7 @@ export default function HistoryModal({ isOpen, onClose }: { isOpen: boolean, onC
             window.electronAPI.historyList().then((list) => {
                 setSessions(list);
                 setLoading(false);
-            }).catch(() => {
-                setLoading(false);
-            });
+            }).catch(() => setLoading(false));
         }
     }, [isOpen]);
 
@@ -31,9 +29,7 @@ export default function HistoryModal({ isOpen, onClose }: { isOpen: boolean, onC
     const handleLoadSession = async (session: HistorySession) => {
         try {
             const messages = await window.electronAPI.historyLoad(session.filePath);
-            if (messages && messages.length > 0) {
-                restoreMessages(messages);
-            }
+            if (messages && messages.length > 0) restoreMessages(messages);
             onClose();
         } catch (error) {
             console.error('Failed to load session:', error);
@@ -59,40 +55,41 @@ export default function HistoryModal({ isOpen, onClose }: { isOpen: boolean, onC
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center non-draggable" onClick={onClose}>
-            <div className="bg-surface border border-border rounded-2xl shadow-2xl shadow-black/40 w-[380px] overflow-hidden" onClick={e => e.stopPropagation()} style={{ animation: 'slide-up 0.2s ease-out' }}>
-                {/* Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-                    <h2 className="text-sm font-semibold text-text-primary">History</h2>
-                    <button onClick={onClose} className="p-1 text-text-muted hover:text-text-primary rounded-md hover:bg-white/[0.04] transition-colors">
-                        <X size={14} />
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center non-draggable" onClick={onClose}>
+            <div
+                className="bg-surface border border-border rounded-xl shadow-2xl shadow-black/60 w-[340px] overflow-hidden"
+                onClick={e => e.stopPropagation()}
+                style={{ animation: 'slide-up 0.2s ease-out' }}
+            >
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                    <h2 className="text-[12px] font-semibold text-text-primary tracking-[-0.01em]">History</h2>
+                    <button onClick={onClose} className="p-1 text-text-muted/40 hover:text-text-secondary rounded transition-colors">
+                        <X size={12} />
                     </button>
                 </div>
 
-                {/* Sessions List */}
-                <div className="max-h-[340px] overflow-y-auto">
+                <div className="max-h-[300px] overflow-y-auto">
                     {loading ? (
-                        <div className="flex items-center justify-center gap-2 py-12 text-text-muted">
-                            <Loader2 size={14} className="animate-spin" />
-                            <span className="text-xs">Loading...</span>
+                        <div className="flex items-center justify-center gap-2 py-10 text-text-muted/50">
+                            <Loader2 size={12} className="animate-spin" />
+                            <span className="text-[10px]">Loading</span>
                         </div>
                     ) : sessions.length === 0 ? (
-                        <div className="py-12 text-center px-6">
-                            <p className="text-xs text-text-muted">No sessions yet</p>
-                            <p className="text-[10px] text-text-muted/60 mt-1">Sessions are saved when you clear a chat</p>
+                        <div className="py-10 text-center px-6">
+                            <p className="text-[10px] text-text-muted/50">No saved sessions</p>
                         </div>
                     ) : (
-                        <div className="p-2">
+                        <div className="p-1.5">
                             {sessions.map(s => (
                                 <button
                                     key={s.id}
                                     onClick={() => handleLoadSession(s)}
-                                    className="w-full p-3 rounded-xl hover:bg-white/[0.03] transition-colors text-left group"
+                                    className="w-full p-2.5 rounded-lg hover:bg-white/[0.025] transition-colors text-left group"
                                 >
-                                    <span className="text-xs font-medium text-text-secondary group-hover:text-text-primary transition-colors block truncate">
+                                    <span className="text-[11px] text-text-secondary group-hover:text-text-primary transition-colors block truncate leading-snug">
                                         {s.excerpt || 'Untitled'}
                                     </span>
-                                    <span className="text-[10px] text-text-muted font-mono mt-0.5 block">
+                                    <span className="text-[9px] text-text-muted/40 font-mono mt-0.5 block">
                                         {formatDate(s.date)}
                                     </span>
                                 </button>

@@ -31,32 +31,32 @@ export default function InviteModal() {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center" onClick={() => setShowInvite(false)}>
-            <div className="bg-surface border border-border rounded-2xl shadow-2xl shadow-black/40 w-[360px] p-6 relative" onClick={e => e.stopPropagation()} style={{ animation: 'slide-up 0.2s ease-out' }}>
-                <button onClick={() => setShowInvite(false)} className="absolute top-4 right-4 p-1 text-text-muted hover:text-text-primary rounded-md hover:bg-white/[0.04] transition-colors">
-                    <X size={14} />
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center" onClick={() => setShowInvite(false)}>
+            <div className="bg-surface border border-border rounded-xl shadow-2xl shadow-black/60 w-[320px] p-5 relative" onClick={e => e.stopPropagation()} style={{ animation: 'slide-up 0.2s ease-out' }}>
+                <button onClick={() => setShowInvite(false)} className="absolute top-3.5 right-3.5 p-1 text-text-muted/40 hover:text-text-secondary rounded transition-colors">
+                    <X size={12} />
                 </button>
 
-                <h2 className="text-sm font-semibold text-text-primary mb-1">Host Session</h2>
-                <p className="text-text-muted text-xs mb-5">Create a live collaboration room.</p>
+                <h2 className="text-[12px] font-semibold text-text-primary mb-0.5 tracking-[-0.01em]">Host Session</h2>
+                <p className="text-text-muted/50 text-[10px] mb-4">Create a collaboration room</p>
 
                 {roomId ? (
-                    <div className="flex flex-col gap-3">
-                        <div className="flex items-center gap-2 bg-background border border-border p-3 rounded-xl font-mono text-accent text-sm">
+                    <div className="flex flex-col gap-2.5">
+                        <div className="flex items-center gap-2 bg-white/[0.02] border border-border p-2.5 rounded-lg font-mono text-accent text-[11px]">
                             <span className="flex-1 select-all">{roomId}</span>
-                            <button onClick={handleCopy} className="p-1 text-text-muted hover:text-text-primary rounded transition-colors">
-                                {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+                            <button onClick={handleCopy} className="p-1 text-text-muted/40 hover:text-text-secondary rounded transition-colors">
+                                {copied ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
                             </button>
                         </div>
-                        <p className="text-[10px] text-text-muted text-center">Share this code with your team</p>
+                        <p className="text-[9px] text-text-muted/40 text-center">Share this code with your team</p>
                     </div>
                 ) : (
                     <button
                         onClick={handleGenerate}
                         disabled={isGenerating}
-                        className="w-full flex items-center justify-center gap-2 bg-accent hover:bg-accent/90 text-white font-medium py-2.5 rounded-xl transition-all disabled:opacity-50 text-xs"
+                        className="w-full flex items-center justify-center gap-1.5 bg-accent/90 hover:bg-accent text-white font-medium py-2 rounded-lg transition-all disabled:opacity-50 text-[11px]"
                     >
-                        {isGenerating && <Loader2 size={14} className="animate-spin" />}
+                        {isGenerating && <Loader2 size={12} className="animate-spin" />}
                         {isGenerating ? "Starting..." : "Generate Invite Code"}
                     </button>
                 )}

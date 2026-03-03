@@ -6,25 +6,25 @@ export default function ViewToggle() {
     const setActiveView = useTestStore(state => state.setActiveView);
 
     return (
-        <div className="flex bg-surface border border-border rounded-lg p-0.5 gap-0.5">
+        <div className="flex bg-white/[0.02] border border-border rounded-md p-[2px] gap-[2px]">
             <button
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${activeView === 'flowchart'
-                        ? 'bg-accent/15 text-accent border border-accent/10'
-                        : 'text-text-muted hover:text-text-secondary border border-transparent'
+                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium transition-all ${activeView === 'flowchart'
+                        ? 'bg-white/[0.06] text-text-primary'
+                        : 'text-text-muted/60 hover:text-text-secondary'
                     }`}
                 onClick={() => setActiveView('flowchart')}
             >
-                <Network size={13} />
+                <Network size={10} />
                 Flow
             </button>
             <button
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${activeView === 'code'
-                        ? 'bg-accent/15 text-accent border border-accent/10'
-                        : 'text-text-muted hover:text-text-secondary border border-transparent'
+                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium transition-all ${activeView === 'code'
+                        ? 'bg-white/[0.06] text-text-primary'
+                        : 'text-text-muted/60 hover:text-text-secondary'
                     }`}
                 onClick={() => setActiveView('code')}
             >
-                <Code2 size={13} />
+                <Code2 size={10} />
                 Code
             </button>
         </div>

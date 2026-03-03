@@ -10,10 +10,7 @@ export default function ElementPicker() {
             addPinnedElement(data as any);
             setPickerActive(false);
         });
-
-        return () => {
-            window.electronAPI.removeAllListeners('picker:element-selected');
-        };
+        return () => { window.electronAPI.removeAllListeners('picker:element-selected'); };
     }, [addPinnedElement, setPickerActive]);
 
     const togglePicker = async () => {
@@ -29,12 +26,12 @@ export default function ElementPicker() {
     return (
         <button
             onClick={togglePicker}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${isPickerActive
-                    ? 'bg-accent/15 text-accent border border-accent/20 shadow-[0_0_12px_rgba(99,102,241,0.15)]'
-                    : 'text-text-muted hover:text-text-secondary hover:bg-white/[0.04] border border-transparent'
+            className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all ${isPickerActive
+                    ? 'bg-accent/10 text-accent border border-accent/15'
+                    : 'text-text-muted/60 hover:text-text-secondary btn-surface'
                 }`}
         >
-            <MousePointer2 size={13} className={isPickerActive ? 'animate-pulse' : ''} />
+            <MousePointer2 size={11} className={isPickerActive ? 'animate-pulse' : ''} />
             {isPickerActive ? 'Picking' : 'Pick'}
         </button>
     );

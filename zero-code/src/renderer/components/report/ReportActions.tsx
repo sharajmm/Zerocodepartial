@@ -92,39 +92,39 @@ export default function ReportActions() {
     };
 
     return (
-        <div className="mx-2 mt-1 mb-1 p-2.5 bg-background border border-border rounded-xl text-xs shrink-0">
+        <div className="mx-2 mt-1 mb-1 p-2.5 bg-white/[0.01] border border-border rounded-lg text-xs shrink-0">
             {!lastReportPath && !isGenerating ? (
                 <button
                     onClick={handleGenerate}
-                    className="flex w-full justify-center items-center gap-1.5 px-3 py-2 bg-accent/10 hover:bg-accent/15 text-accent rounded-lg border border-accent/10 transition-all text-[11px] font-medium"
+                    className="flex w-full justify-center items-center gap-1.5 px-3 py-1.5 bg-accent/8 hover:bg-accent/12 text-accent/80 rounded-md border border-accent/8 transition-all text-[10px] font-medium"
                 >
-                    <FileText size={13} />
+                    <FileText size={11} />
                     Generate Report
                 </button>
             ) : isGenerating ? (
-                <button disabled className="flex w-full justify-center items-center gap-1.5 px-3 py-2 bg-background text-text-muted rounded-lg border border-border cursor-not-allowed text-[11px]">
-                    <Loader2 size={13} className="animate-spin" />
-                    Generating...
+                <button disabled className="flex w-full justify-center items-center gap-1.5 px-3 py-1.5 bg-white/[0.02] text-text-muted/50 rounded-md border border-border cursor-not-allowed text-[10px]">
+                    <Loader2 size={11} className="animate-spin" />
+                    Generating
                 </button>
             ) : (
                 <>
-                    <div className="flex items-center gap-1.5 text-emerald-400 mb-2 text-[11px] font-medium">
-                        <FileCheck size={13} />
+                    <div className="flex items-center gap-1.5 text-emerald-400/80 mb-2 text-[10px] font-medium">
+                        <FileCheck size={11} />
                         Report Ready
                     </div>
-                    <div className="flex gap-1.5">
+                    <div className="flex gap-1">
                         <button
                             onClick={handleOpenPdf}
-                            className="flex-1 flex justify-center items-center gap-1 px-2 py-1.5 bg-surface hover:bg-white/[0.04] text-text-secondary rounded-lg border border-border transition-all text-[10px] font-medium"
+                            className="flex-1 flex justify-center items-center gap-1 px-2 py-1 btn-surface rounded-md text-text-muted hover:text-text-secondary text-[9px] font-medium"
                         >
-                            <FileText size={11} />
+                            <FileText size={9} />
                             Open
                         </button>
                         <button
                             onClick={handleExportPdf}
-                            className="flex-1 flex justify-center items-center gap-1 px-2 py-1.5 bg-accent/10 hover:bg-accent/15 text-accent rounded-lg border border-accent/10 transition-all text-[10px] font-medium"
+                            className="flex-1 flex justify-center items-center gap-1 px-2 py-1 bg-accent/8 hover:bg-accent/12 text-accent/70 rounded-md border border-accent/6 text-[9px] font-medium transition-colors"
                         >
-                            <Download size={11} />
+                            <Download size={9} />
                             Export
                         </button>
                     </div>
@@ -134,9 +134,9 @@ export default function ReportActions() {
             {hasFailures && (
                 <button
                     onClick={handleOpenEvidence}
-                    className="flex w-full justify-center items-center gap-1.5 px-3 py-1.5 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 text-red-400 rounded-lg transition-all mt-1.5 text-[10px] font-medium"
+                    className="flex w-full justify-center items-center gap-1 px-3 py-1 bg-red-500/5 hover:bg-red-500/8 border border-red-500/6 text-red-400/70 rounded-md transition-all mt-1.5 text-[9px] font-medium"
                 >
-                    <FolderOpen size={11} />
+                    <FolderOpen size={9} />
                     Evidence
                 </button>
             )}

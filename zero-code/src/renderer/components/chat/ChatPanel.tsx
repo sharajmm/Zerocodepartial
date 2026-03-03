@@ -18,17 +18,14 @@ export default function ChatPanel() {
     const removePinnedElement = useBrowserStore(state => state.removePinnedElement);
     const selectedModel = useSettingsStore(state => state.selectedModel);
 
-    // Disable inputs if we are a guest in a room
     const roomId = useCollabStore(state => state.roomId);
     const role = useCollabStore(state => state.role);
     const isGuest = Boolean(roomId) && role !== 'Owner';
 
     const { sendQuery } = useOllamaStream();
-
     const [input, setInput] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Calculate context usage locally based on model size
     const getModelContextLimit = (model: string) => {
         const lower = model.toLowerCase();
         if (lower.includes('0.5b') || lower.includes('1b')) return 4096;
@@ -44,7 +41,6 @@ export default function ChatPanel() {
     const contextPercentage = Math.min((contextTokens / MAX_CONTEXT_TOKENS) * 100, 100);
     const isContextFull = contextPercentage >= 99;
 
-    // Auto-scroll to bottom
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
@@ -64,22 +60,19 @@ export default function ChatPanel() {
     };
 
     return (
-        <div className="h-full bg-surface border-l border-border flex flex-col">
+        <div className="h-full bg-surface/40 border-l border-border flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between px-3 py-2 border-b border-border shrink-0">
+            <div className="flex items-center justify-between px-3 h-9 border-b border-border shrink-0 relative">
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.02] to-transparent" />
                 <div className="flex items-center gap-2">
-                    <h2 className="text-text-secondary text-[11px] font-semibold tracking-wide uppercase">Chat</h2>
+                    <h2 className="text-text-muted text-[10px] font-semibold tracking-widest uppercase">Chat</h2>
                     {messages.length > 0 && !isGuest && (
-                        <button
-                            onClick={() => clearChat()}
-                            className="p-1 text-text-muted hover:text-red-400 rounded transition-colors"
-                            title="Clear Chat"
-                        >
-                            <Trash2 size={11} />
+                        <button onClick={() => clearChat()} className="p-1 text-text-muted/50 hover:text-red-400 rounded transition-colors" title="Clear">
+                            <Trash2 size={10} />
                         </button>
                     )}
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                     {!isGuest && <ElementPicker />}
                 </div>
             </div>
@@ -88,11 +81,11 @@ export default function ChatPanel() {
             <RTMTaskPanel />
 
             {/* Messages */}
-            <div className="flex-1 flex flex-col px-2 py-2 overflow-y-auto gap-1.5">
+            <div className="flex-1 flex flex-col px-2.5 py-2 overflow-y-auto gap-2">
                 {messages.length === 0 ? (
-                    <div className="m-auto flex flex-col items-center gap-2 text-center px-4">
-                        <p className="text-text-secondary text-xs font-medium">Describe what you want to test</p>
-                        <p className="text-text-muted text-[10px]">e.g., "Test if all navigation links work"</p>
+                    <div className="m-auto flex flex-col items-center gap-1.5 text-center px-6">
+                        <p className="text-text-muted text-[11px]">Describe what you want to test</p>
+                        <p className="text-text-muted/50 text-[10px] font-mono">"Test if all navigation links work"</p>
                     </div>
                 ) : (
                     messages.map((msg) => (
@@ -102,30 +95,28 @@ export default function ChatPanel() {
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Area */}
-            <div className="px-2 pb-2 pt-1 border-t border-border shrink-0">
-                {/* Context Bar */}
+            {/* Input */}
+            <div className="px-2.5 pb-2 pt-1.5 border-t border-border shrink-0">
                 {messages.length > 0 && (
-                    <div className="flex items-center gap-2 px-1 mb-1.5">
-                        <div className="flex-1 h-1 bg-background rounded-full overflow-hidden">
+                    <div className="flex items-center gap-2 px-0.5 mb-1.5">
+                        <div className="flex-1 h-[3px] bg-white/[0.03] rounded-full overflow-hidden">
                             <div
-                                className={`h-full rounded-full transition-all duration-500 ${isContextFull ? 'bg-red-500' : contextPercentage > 75 ? 'bg-amber-500' : 'bg-accent/60'}`}
+                                className={`h-full rounded-full transition-all duration-700 ease-out ${isContextFull ? 'bg-red-400/80' : contextPercentage > 75 ? 'bg-amber-400/60' : 'bg-accent/40'}`}
                                 style={{ width: `${contextPercentage}%` }}
                             />
                         </div>
-                        <span className={`text-[9px] font-mono tabular-nums ${isContextFull ? 'text-red-400' : 'text-text-muted'}`}>
+                        <span className={`text-[8px] font-mono tabular-nums ${isContextFull ? 'text-red-400' : 'text-text-muted/50'}`}>
                             {contextPercentage.toFixed(0)}%
                         </span>
                     </div>
                 )}
 
-                {/* Pinned Elements */}
                 {pinnedElements.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-1.5">
                         {pinnedElements.map((el, i) => (
-                            <div key={i} className="flex items-center gap-1 bg-accent/10 text-accent text-[10px] px-2 py-0.5 rounded-full border border-accent/15">
-                                <span className="truncate max-w-[100px] font-mono">{el.selector}</span>
-                                <button type="button" onClick={() => removePinnedElement(el.selector)} className="hover:text-white transition-colors">&times;</button>
+                            <div key={i} className="flex items-center gap-1 bg-white/[0.03] text-text-secondary text-[9px] px-2 py-0.5 rounded border border-border font-mono">
+                                <span className="truncate max-w-[80px]">{el.selector}</span>
+                                <button type="button" onClick={() => removePinnedElement(el.selector)} className="text-text-muted hover:text-white transition-colors">&times;</button>
                             </div>
                         ))}
                     </div>
@@ -134,17 +125,17 @@ export default function ChatPanel() {
                 {isContextFull ? (
                     <button
                         onClick={() => clearChat()}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/15 transition-colors text-xs font-medium"
+                        className="w-full flex items-center justify-center gap-1.5 py-2 rounded-md bg-red-500/8 text-red-400 border border-red-500/10 hover:bg-red-500/12 transition-colors text-[10px] font-medium"
                     >
-                        <PlusCircle size={14} />
+                        <PlusCircle size={12} />
                         New Chat
                     </button>
                 ) : (
                     <form onSubmit={handleSubmit} className="relative">
                         <input
                             type="text"
-                            placeholder={isGuest ? "Viewing shared session..." : isStreaming ? "AI is thinking..." : "Describe what to test..."}
-                            className="w-full rounded-lg bg-background border border-border px-3 py-2.5 pr-10 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40 focus:ring-1 focus:ring-accent/20 transition-all disabled:opacity-40"
+                            placeholder={isGuest ? "Viewing shared session..." : isStreaming ? "Thinking..." : "Describe a test..."}
+                            className="w-full rounded-md bg-background/80 border border-border px-3 py-2 pr-9 text-[11px] text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-white/[0.1] transition-colors disabled:opacity-30"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             disabled={isStreaming || isGuest}
@@ -152,9 +143,9 @@ export default function ChatPanel() {
                         <button
                             type="submit"
                             disabled={isStreaming || isGuest || !input.trim()}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-text-muted hover:text-accent disabled:opacity-30 disabled:hover:text-text-muted transition-colors rounded"
+                            className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 text-text-muted/40 hover:text-accent disabled:opacity-20 disabled:hover:text-text-muted/40 transition-colors rounded"
                         >
-                            <Send size={13} />
+                            <Send size={12} />
                         </button>
                     </form>
                 )}

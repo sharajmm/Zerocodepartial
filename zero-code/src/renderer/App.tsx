@@ -8,7 +8,7 @@ import JoinModal from './components/collaboration/JoinModal';
 const App = () => {
     return (
         <CollabProvider>
-            <div className="flex flex-col h-screen w-screen overflow-hidden bg-background">
+            <div className="flex flex-col h-screen w-screen overflow-hidden bg-background noise-overlay">
                 <TopBar />
                 <div className="flex-1 overflow-hidden relative">
                     <ThreePanelLayout />

@@ -60,7 +60,7 @@ function FlowchartCanvasInner() {
         if (!viewportElement) return;
 
         toPng(viewportElement, {
-            backgroundColor: '#08080c',
+            backgroundColor: '#06060a',
             width: nodesBounds.width,
             height: nodesBounds.height,
             style: {
@@ -81,8 +81,8 @@ function FlowchartCanvasInner() {
     return (
         <div className="w-full h-full bg-background relative">
             {nodes.length === 0 ? (
-                <div className="w-full h-full flex flex-col items-center justify-center text-text-muted">
-                    <p className="text-xs">No flowchart generated yet</p>
+                <div className="w-full h-full flex items-center justify-center text-text-muted/40">
+                    <p className="text-[10px] font-mono">No flowchart</p>
                 </div>
             ) : (
                 <ReactFlow
@@ -97,14 +97,14 @@ function FlowchartCanvasInner() {
                     colorMode="dark"
                     proOptions={{ hideAttribution: true }}
                 >
-                    <Background color="#1a1a28" gap={20} size={1} />
+                    <Background color="rgba(255,255,255,0.02)" gap={24} size={1} />
                     <Controls showInteractive={false} />
                     <button
                         onClick={onDownload}
-                        className="absolute bottom-3 right-3 z-10 flex items-center gap-1.5 px-2.5 py-1.5 bg-surface text-text-secondary hover:text-text-primary rounded-lg border border-border hover:border-border-hover transition-all text-[11px] font-medium"
-                        title="Download as PNG"
+                        className="absolute bottom-2 right-2 z-10 flex items-center gap-1 px-2 py-1 btn-surface rounded-md text-[9px] font-medium text-text-muted/60 hover:text-text-secondary"
+                        title="Download PNG"
                     >
-                        <Download size={12} />
+                        <Download size={10} />
                         PNG
                     </button>
                 </ReactFlow>
